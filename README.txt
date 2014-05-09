@@ -60,3 +60,7 @@ concept.py
 
     TO IMPROVE:
         - Implement SEM_NET as a graph
+
+simulator.py
+    TO DO:
+        - Finish the docstring of COMP_TRACE
