@@ -125,7 +125,7 @@ class SIMULATOR:
             - verbGuide (BOOL): Verbal guidance principles
             - clearData (BOOL): If True, grammatical knowlegde, semantic knowledge and visual input are cleared.
         """
-        self.m_time = 0
+        self.time = 0
         self.max_time = maxTime
         self.utter_time = self.m_time
         self.comp_traces = []
@@ -156,7 +156,134 @@ class SIMULATOR:
             self.SemNet = None
             self.grammar = None
             self.scene = None
-            
+        
+    ###########################################################################
+    # Private methods
+    
+    def add_schema_inst(self, sc_inst):
+        """
+        Add a schema instance to the working memory
+        
+        Args:
+            - sc_inst (SCHEMA_INST)
+        """
+        
+        if not(sc_inst):
+            return
+        
+        if (sc_inst.type == inst.SCHEMA_INST.NODE or sc_inst.type == inst.SCHEMA_INST.RELATION):
+            self.instances.append(sc_inst)
+            self.sem_insts.append(sc_inst)
+        elif (sc_inst.type == inst.SCHEMA_INST.CONSTRUCTION):
+            self.instances.append(sc_inst)
+            self.cxn_insts.append(sc_inst)
+    
+    def ellapsed_time(self):
+        """
+        """
+        return None
+    
+    def deploy_attention(self):
+        """
+        """
+        return None
+    
+    def get_semrep_inst(self, aSchema):
+        """
+        """
+        return None
+    
+    def perceive_schema(self, aPer, new_rels):
+        """
+        """
+        return None
+        
+    def perceive_scene(self):
+        """
+        """
+        return None
+    
+    def pair_node(self):
+        """
+        """
+        return None
+        
+    def invoke_cxn_inst(self):
+        """
+        """
+        return None
+    
+    def invoke_constructions(self):
+        """
+        """
+        return None
+    
+    def find_cxn_struct(self):
+        """
+        """
+        return None
+    
+    def do_cooperation(self):
+        """
+        """
+        return None
+    
+    def create_comp_trace(self):
+        """
+        """
+        return None
+    
+    def do_competition(self):
+        """
+        """
+        return None
+    
+    def process_constructions(self):
+        """
+        """
+        return None
+    
+    def match_phon_lists(self):
+        """
+        """
+        return None
+    
+    def produce_utterance(self):
+        """
+        """
+        return None
+    
+    ###########################################################################
+    # Public method
+    
+    def proceed(self):
+        """
+        WRITE DOCSTRING
+        """
+        if (self.time >= self.max_time):
+            return False
+        
+        # Maintenance processes
+        self.ellapsed_time()
+        
+        # Vision processes
+        self.deploy_attention()
+        self.perceive_scene()
+        
+        # TCG processes
+        self.invoke_constructions()
+        self.process_constructions()
+        
+        # Utterance processes
+        self.produce_utterance()
+        
+        return (inst.SCHEMA_INST.inst_activity or self.vis_update)
+    
+###############################################################################
+
+if __name__=='__main__':
+    print "No test case implemented"
+    
         
         
         
