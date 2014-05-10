@@ -11,6 +11,7 @@ import concept as cpt
 import construction as cxn
 import scene as scn
 import instance as inst
+import random
 
 class COMP_TRACE:
     """
@@ -159,6 +160,13 @@ class SIMULATOR:
         
     ###########################################################################
     # Private methods
+    def _randmax(i, j):
+        if i > j:
+            return 0
+        elif i < j:
+            return 1
+        else:
+            return random.randint(0,1)
     
     def add_schema_inst(self, sc_inst):
         """
@@ -180,28 +188,179 @@ class SIMULATOR:
     
     def ellapsed_time(self):
         """
+        Maintenance process.
+        Steps:
+            - Set cxn_inst with activity <= 0 to dead
+            - Set old cxn_inst to activity = 0 (old means it has been read out)
+            - Set cxn_inst to Fresh = False (Fresh only when it has just been invoked)
+            - Validate all instances
+            - Remove dead instances
+            - Advance time
         """
-        return None
+        for sc_inst in self.instances:
+            if not(sc_inst.alive):
+                continue
+            
+            # When activation drops to zero, an instance dies
+            if (sc_inst.activation <= 0):
+                sc_inst.Alive(False)
+            
+            # When old, activation falls down (to 0)
+            if (sc_inst.old):
+                sc_inst.activation = 0
+                # Employ a more subtle policy later for treating already produced instances
+            
+            # Not fresh anymore
+            sc_inst.Fresh(False)
+        
+        # Validate all instances (iteratively find dead ones)
+        while True:
+            someone_died = False
+            for sc_inst in self.instances:
+                if not(sc_inst.alive):
+                    continue
+                
+                #  Do maintenance
+                sc_inst.validate()
+                someone_died = someone_died or not(sc_inst.alive)
+            if not(someone_died):
+                break
+        
+        # Remove dead instances
+        for sc_inst in self.instances:
+            if not(sc_inst.alive):
+                if(sc_inst in self.sem_insts):
+                    self.sem_insts.remove(sc_inst)
+                if(sc_inst in self.cxn_insts):
+                    self.cxn_insts.remove(sc_inst)
+                if(sc_inst in self.rd_str.insts):
+                    self.rd_str.insts.remove(sc_inst)
+                
+                self.instances.remove(sc_inst)
+        
+        # Advance time
+        self.time += 1
+                
     
     def deploy_attention(self):
         """
+        WRITE DOCSTRING!!
         """
+        # Visual update
+        self.vis_update = True
+        
+        # Set the current attention focus
+        self.atten = self.next_atten
+        
+        # Inspect region (incrementally reduce uncertainty)
+        if self.atten or self.atten.uncertainty>0:
+            self.atten.uncertainty -= 1
+        
+        # Find the next target (if no region curently inspected or no uncertainty anymore)
+        if (not(self.atten) or self.atten <=0):
+            
+            # Saccade to the most salient region
+            max_saliency = 0
+            for reg in self.scene.regions:
+                if(reg.uncertainty <=0):
+                    continue # Already inspected, inhibition of return
+            
+                if self._randmax(max_saliency, reg.saliency) == 1:
+                    max_saliency = reg.saliency
+                    self.next_atten = reg
+            
+            if max_saliency <=0:
+                self.vis_update = False # No more region to attend
+                self.next_atten = None
+                
+    
+    def get_semrep_inst(self, percept_schema):
+        """
+        Look for the SemRep instance linked to a given perceptual schema.
+        Return the SemRep instance if it exists, None otherwise.
+        """
+        for s in self.sem_insts:
+            if not(s.alive):
+                continue
+            if s.percept_schema == percept_schema:
+                return s
         return None
     
-    def get_semrep_inst(self, aSchema):
+    def perceive_schema(self, aPercept, new_rels):
         """
+        For a given percept, update or create associated SemRep nodes and relations.
+        
+        Notes:
+            - Updated or created relations will be added to new_rels.
         """
-        return None
-    
-    def perceive_schema(self, aPer, new_rels):
-        """
-        """
-        return None
+        if not(aPercept):
+            return
+        
+        if (aPercept.schema.type == scn.SCHEMA.OBJECT):
+            node = self.get_semrep_inst(aPercept.schema)
+            if node:
+                # Update node instance
+                if aPercept.replace_concept:
+                    node.Update(aPercept.concept)
+                else:
+                    node.Update(aPercept.schema.concept)
+            else:
+                # Create new node instance
+                node = inst.NODE_INST()
+                node.Instantiate(aPercept.schema, 100)
+                if aPercept.replace_concept:
+                    node.Update(aPercept.concept)
+                
+                self.add_schema_inst(node)
+        if (aPercept.schema.type == scn.SCHEMA.RELATION):
+            relation = self.get_semrep_inst(aPercept.schema)
+            if relation:
+                # Update relation instance
+                if aPercept.replace_concept:
+                    relation.Update(aPercept.concept)
+                else:
+                    relation.Update(aPercept.schema.concept)
+            else:
+                # Create new relation instance
+                relation = inst.REL_INST()
+                relation.Instantiate(aPercept.schema, 100)
+                if aPercept.replace_concept:
+                    relation.Update(aPercept.concept)
+                
+                self.add_schema_inst(relation)
+                self.new_rels.append(relation)
         
     def perceive_scene(self):
         """
+        Perceive all regions that are certain (uncertainty == 0).
         """
-        return None
+        new_rels = []
+        
+        # Reset perceived regions
+        self.per_regions = []
+        
+        # Perceive regions that are certain (uncertainty == 0)
+        for rgn in self.scene.regions:
+            if rgn.uncertainty == 0:
+                # Perceive schemas
+                for percept in rgn.percepts:
+                    self.perceive_schema(percept, new_rels)
+                
+                rgn.uncertainty -= 1 # Region won't be perceived anymore
+                
+                # Append traces for perceived regions
+                self.per_regions.append(rgn)
+        
+        # Establish connection of the newly created SemRep relations
+        for rel in new_rels:
+            sc_rel = rel.schema
+            
+            # Connect node instances
+            rel.pFrom  = self.get_semrep_inst(sc_rel.pFrom)
+            rel.pTo = self.get_semrep_inst(sc_rel.pTo)
+            
+            # Alive only when the full connection is valid
+            rel.Alive(rel.pFrom and rel.pTo)
     
     def pair_node(self):
         """

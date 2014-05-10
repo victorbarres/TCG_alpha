@@ -149,7 +149,7 @@ class REL_INST(SEMREP_INST):
         """
         Check if connecting SemRep instances exist and are alive.
         """
-        if(not(self.pFrom) or not(self.pTo) or not(self.pFrom.alive) or not(self.pTo.alive)):
+        if not(self.pFrom and self.pTo and self.pFrom.alive and self.pTo.alive):
             self.Alive(False)
 
 ### Construction schema instance ###
