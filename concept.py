@@ -251,6 +251,8 @@ if __name__=='__main__':
     
     c1 = CONCEPT('c1', 'dog')
     c2 = CONCEPT('c2', 'animal')
+    
+    print CONCEPT.match(c2, c1)
 
     
     

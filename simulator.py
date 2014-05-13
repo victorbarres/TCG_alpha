@@ -7,10 +7,10 @@ Created on Fri May 09 13:49:40 2014
 Define the simulator that runs the SemRep/TCG processes.
 """
 
-import concept as cpt
-import construction as cxn
-import scene as scn
-import instance as inst
+import concept as CPT
+import construction as CXN
+import scene as SCN
+import instance as INST
 import random
 
 class COMP_TRACE:
@@ -159,7 +159,8 @@ class SIMULATOR:
             self.scene = None
         
     ###########################################################################
-    # Private methods
+    # PRIVATE METHODS
+    ###########################################################################
     def _randmax(i, j):
         if i > j:
             return 0
@@ -167,6 +168,7 @@ class SIMULATOR:
             return 1
         else:
             return random.randint(0,1)
+    ###########################################################################
     
     def add_schema_inst(self, sc_inst):
         """
@@ -179,10 +181,10 @@ class SIMULATOR:
         if not(sc_inst):
             return
         
-        if (sc_inst.type == inst.SCHEMA_INST.NODE or sc_inst.type == inst.SCHEMA_INST.RELATION):
+        if (sc_inst.type == INST.SCHEMA_INST.NODE or sc_inst.type == INST.SCHEMA_INST.RELATION):
             self.instances.append(sc_inst)
             self.sem_insts.append(sc_inst)
-        elif (sc_inst.type == inst.SCHEMA_INST.CONSTRUCTION):
+        elif (sc_inst.type == INST.SCHEMA_INST.CONSTRUCTION):
             self.instances.append(sc_inst)
             self.cxn_insts.append(sc_inst)
     
@@ -241,7 +243,7 @@ class SIMULATOR:
         # Advance time
         self.time += 1
                 
-    
+    ###########################################################################
     def deploy_attention(self):
         """
         WRITE DOCSTRING!!
@@ -273,7 +275,7 @@ class SIMULATOR:
                 self.vis_update = False # No more region to attend
                 self.next_atten = None
                 
-    
+    ###########################################################################
     def get_semrep_inst(self, percept_schema):
         """
         Look for the SemRep instance linked to a given perceptual schema.
@@ -296,7 +298,7 @@ class SIMULATOR:
         if not(aPercept):
             return
         
-        if (aPercept.schema.type == scn.SCHEMA.OBJECT):
+        if (aPercept.schema.type == SCN.SCHEMA.OBJECT):
             node = self.get_semrep_inst(aPercept.schema)
             if node:
                 # Update node instance
@@ -306,13 +308,13 @@ class SIMULATOR:
                     node.Update(aPercept.schema.concept)
             else:
                 # Create new node instance
-                node = inst.NODE_INST()
+                node = INST.NODE_INST()
                 node.Instantiate(aPercept.schema, 100)
                 if aPercept.replace_concept:
                     node.Update(aPercept.concept)
                 
                 self.add_schema_inst(node)
-        if (aPercept.schema.type == scn.SCHEMA.RELATION):
+        if (aPercept.schema.type == SCN.SCHEMA.RELATION):
             relation = self.get_semrep_inst(aPercept.schema)
             if relation:
                 # Update relation instance
@@ -322,7 +324,7 @@ class SIMULATOR:
                     relation.Update(aPercept.schema.concept)
             else:
                 # Create new relation instance
-                relation = inst.REL_INST()
+                relation = INST.REL_INST()
                 relation.Instantiate(aPercept.schema, 100)
                 if aPercept.replace_concept:
                     relation.Update(aPercept.concept)
@@ -362,46 +364,274 @@ class SIMULATOR:
             # Alive only when the full connection is valid
             rel.Alive(rel.pFrom and rel.pTo)
     
-    def pair_node(self):
+    ###########################################################################
+    def pair_node(self, node_inst, node_elem, aCxn, attaches):
         """
+        WRITE DOCSTRING!!
         """
-        return None
+        idx = 0
+        for semrep_inst in attaches:
+            if semrep_inst == node_inst:
+                return aCxn.SemFrame[idx] == node_elem
+            idx += 1
+            
+        return False
         
-    def invoke_cxn_inst(self):
+    def invoke_cxn_inst(self, aCxn, sf_idx, attaches):
         """
+        WRITE DOCSTRING!!
+        SUBGRAPH MATCHING ALGORITHM.        
+        
+        Try to match the SemFrame of a construction onto a SemRep subgraph. If
+        success, instantiate construction.
+        
+        Args:
+            - aCxn (CXN): A construction in the grammar.
+            - sf_idx (INT): Index of SemFrame element in aCXN.SemFrame.
+            - attaches ([SEMREP_INST]): Keeps track of the SemRep instances that have been matched during
+            recursive search of matching subgraphs.
+        
+        Notes:
+            - Only instantiates construction that match onto a SemRep sugraph that has
+            at least one element alive.
+            - Checks that a similar instance doesn't already exist before adding to working
+            memory.
+            - Algorithm steps:
+                - For first element of SemFrame, try to find matching SemRep instance
+                - Then recursively try to find matches for other elements of the SemFrame
+                - Then check that topology match between SemFrame and list of matching attached SemFrame 
+                instances (i.e. check that toplogy match between SemFrame and Attatches)
+            - Algorithm comments:
+                - This does not make use of the directed graph structure during the first search phase since
+                it only checks the topology afterwards.
+                - If SemRep = N1 elements, SemFrame = N2 elements, number of test during search = N1^N2 !! + 
+                then the cost of the topology checks... this algorithm is clearly NOT optimal, but works for now
+                since SemRep and SemFrames are small.
+            
+            - The matching of concept is very simple here (match or no match).   
         """
-        return None
+        if sf_idx+1 < len(aCxn.SemFrame): # Still some SemFrame elements to process
+            sf_elem = aCxn.SemFrame[sf_idx]
+            
+            # Iterate for all SemRem instances to find a potential match
+            for sr_inst in self.sem_insts:
+                if not(sr_inst.alive):
+                    continue
+                
+                # Need to have the same type
+                if ((sr_inst.type == INST.SCHEMA_INST.NODE and sf_elem.type != CXN.TP_ELEM.NODE) or
+                    (sr_inst.type == INST.SCHEMA_INST.RELATION and sf_elem.type != CXN.TP_ELEM.RELATION)):
+                        continue
+                
+                # Check if the SemRep instances has already been matched with another SemFrame element of aCxn
+                if (sr_inst in attaches):
+                    continue
+                
+                # Check if concepts match
+                if not(CPT.CONCEPT.match(sr_inst.concept, sf_elem.concept)):
+                    continue
+                
+                attaches.append(sr_inst)
+                
+                # Recursively call function for next SemFrame element of the consrtruction
+                self.invoke_cxn_inst(aCxn, sf_idx+1, attaches)
+                
+                attaches.pop()
+        else:
+            # Topology check
+            fresh = False
+            for sr_inst in attaches:
+                if sr_inst.fresh: # At least one instance has to be fresh
+                    fresh = True
+                if sr_inst.type != INST.SCHEMA_INST.RELATION:
+                    continue # Only look at relations to determine topology match.
+                    
+                rel_elem = aCxn.SemFrame[attaches.index(sr_inst)] # SemFrame relation element corresponding to the SemRep relation
+                
+                if (not self.pair_node(sr_inst.pFrom, rel_elem.pFrom, aCxn, attaches) or
+                    not self.pair_node(sr_inst.pTo, rel_elem.pTo, aCxn, attaches)):
+                        return # Stop invocatoin
+            
+            if not(fresh):
+                return # Stop invocation
+            
+            # Invoke a new construction instance
+            new_cxn_inst = INST.CXN_INST()
+            new_cxn_inst.instantiate(aCxn, attaches, 100)
+            
+            # Check if there already is an indentical construction instance
+            for anInst in self.cxn_insts:
+                if not(anInst.alive):
+                    continue
+                if new_cxn_inst.compare(anInst):
+                    return # Identical instance already exists
+            
+            self.add_schema_inst(new_cxn_inst)
     
     def invoke_constructions(self):
         """
+        Invoke all constructions whose SemFrame match SemRep subgraphs (no duplicate).
         """
-        return None
+        attaches = []
+        for aCxn in self.grammar:
+            
+            # Match SemFrame elements of aCxn against SemRep subgraphs.
+            self.invoke_cxn_inst(aCxn, 0, attaches)
     
-    def find_cxn_struct(self):
+    ###########################################################################
+    def find_cxn_struct(self, cxn_str, cxn_str_list, comp_val):
         """
+        WRITE DOCSTRING!!
         """
-        return None
+        for aCxn_str in cxn_str_list:
+            if cxn_str == aCxn_str:
+                continue
+            if cxn_str.compare(aCxn_str) == comp_val:
+                return True
+        
+        return False
     
     def do_cooperation(self):
         """
+        WRITE DOCSTRING!!
         """
-        return None
-    
-    def create_comp_trace(self):
+        # Clear all the previously spawned construction structures
+        self.cxn_strs = []
+        for cxn_inst in self.cxn_insts:
+            cxn_inst.cxn_struct = None
+        
+        # Initialize construction hiearchy structures, a cxn_str for each alive cxn_inst
+        for cxn_inst in self.cxn_insts:
+            if not(cxn_inst.alive):
+                continue
+            
+            # Spawn a new structure
+            new_cxn_str = INST.CXN_STRUCT()
+            new_cxn_str.create(cxn_inst)
+            self.cxn_strs.append(new_cxn_str)
+        
+        #
+        # Cooperatoin process (iteratively spanw all possible construction structures)
+        #
+        while True:
+            new_structs = []
+            for i in range(len(self.cxn_strs)-1):
+                cxn_str1 = self.cxn_strs[i]
+                for j in range(i+1,len(self.cxn_strs)):
+                    cxn_str2 = self.cxn_strs[j]
+                    
+                    if not(cxn_str1.fresh or cxn_str2.fresh):
+                        continue # At least one structure has to be fresh
+                    
+                    # Try to combine two structures to spawn a new structure
+                    new_cxn_str = INST.CXN_STRUCT.combine(cxn_str1, cxn_str2)
+                    
+                    # Check if there is already an identical structure
+                    if(new_cxn_str and 
+                        not(self.find_cxn_struct(new_cxn_str, new_structs, 3)) and
+                        not(self.find_cxn_struct(new_cxn_str, self.cxn_strs, 3))):
+                        new_structs.append(new_cxn_str)
+            
+            # Reset freshness of structures
+            for cxn_str in self.cxn_strs:
+                cxn_str.fresh = False
+            
+            # Add newly spawned structures
+            for new_str in new_structs:
+                self.cxn_strs.append(new_str)
+            
+            if not(new_structs):
+                break # No more structure spawned                                
+                                
+    def create_comp_trace(self, winner, loser):
         """
+        WRITE DOCSTRING!!
+        
+        Args:
+            - winner (CXN_INST)
+            - loser (CXN_INST)
         """
-        return None
-    
+        comp_trace = COMP_TRACE()
+        comp_trace.winner = winner
+        comp_trace.loser = loser
+        comp_trace.winSuit = winner.cxn_struct.suitability
+        comp_trace.losSuit = loser.cxn_struct.suitability
+        
+        self.comp_traces.append(comp_trace)
+        
     def do_competition(self):
         """
+        WRITE DOCSTRING!!
         """
-        return None
-    
+        # Clear all previous competition traces
+        self.comp_traces = []
+        
+        # Initialize alive construction instances
+        alive_insts = []
+        for cxn_inst in self.cxn_insts:
+            if cxn_inst.alive:
+                alive_insts.append(cxn_inst)
+        
+        #
+        # Competition process (even if an instance is dead during competition, it still can kill others)
+        #
+        for i in range(len(alive_insts)-1):
+            cxn_inst1 = alive_insts[i]
+            for j in range(i+1,len(alive_insts)):
+                cxn_inst2 = alive_insts[j]
+                
+                mat_info = INST.MATCH_INFO()
+                
+                if(not(INST.CXN_INST.match(cxn_inst1, cxn_inst2, mat_info)) and
+                    cxn_inst1.cxn_struct and
+                    cxn_inst2.cxn_struct):
+                ###############################################################
+                # Alternative version
+                ###############################################################
+#                INST.CXN_INST.match(cxn_inst1, cxn_inst2, mat_info)
+#                if (mat_info.overlap and
+#                    cxn_inst1.cxn_struct and
+#                    not(cxn_inst1.cxn_struct.check_membership(cxn_inst2)) and
+#                    cxn_str2 and
+#                    not(cxn_inst2.cxn_struct.check_membership(cxn_inst1))):
+                ###############################################################    
+                    # Do not tie break in order to prevent reciprocal elimination
+                    if (cxn_inst1.cxn_struct.suitability > cxn_inst2.cxn_struct.suitability and cxn_inst2.alive):
+                        cxn_inst2.Alive(False)
+                        self.create_comp_trace(cxn_inst1, cxn_inst2)
+                    if (cxn_inst1.cxn_struct.suitability < cxn_inst2.cxn_struct.suitability and cxn_inst1.alive):
+                        cxn_inst1.Alive(False)
+                        self.create_comp_trace(cxn_inst2, cxn_inst1)
+                        
     def process_constructions(self):
         """
+        WRITE DOCSTRING!!
         """
-        return None
-    
+        # Cooperation process
+        self.do_cooperation()
+        
+        # Trim obsolete structures (i.e. covering old cxn instances only)
+        for cxn_str in self.cxn_strs:
+            if cxn_str.check_obsolete():
+                self.cxn_strs.remove(cxn_str)
+        
+        # Trim redundant construction structures
+        for cxn_str in self.cxn_strs:
+            if(self.find_cxn_struct(cxn_str, self.cxn_strs, 2)): # cxn_str is included in another structure
+            
+            ###################################################################
+            # Alternative version
+            ###################################################################
+#            if (not(cxn_str.check_complete) and 
+#                self.find_cxn_struct(cxn_str, self.cxn_strs, 2)):
+            ###################################################################
+            self.cxn_strs.remove(cxn_str)
+        
+        # Utterance continuity principle
+        
+        ## TO BE CONTINUED ##        
+        
+    ###########################################################################
     def match_phon_lists(self):
         """
         """
@@ -413,8 +643,8 @@ class SIMULATOR:
         return None
     
     ###########################################################################
-    # Public method
-    
+    # PUBLIC METHODS
+    ###########################################################################
     def proceed(self):
         """
         WRITE DOCSTRING
@@ -436,7 +666,7 @@ class SIMULATOR:
         # Utterance processes
         self.produce_utterance()
         
-        return (inst.SCHEMA_INST.inst_activity or self.vis_update)
+        return (INST.SCHEMA_INST.inst_activity or self.vis_update)
     
 ###############################################################################
 

@@ -45,6 +45,8 @@ instance.py
 scene.py
 
 loader.py
+    TO IMPROVE:
+        - Migrate data storage format to Json for clarity.
 
 ###############################################################################
 # In progress
@@ -64,3 +66,10 @@ concept.py
 simulator.py
     TO DO:
         - Finish the docstring of COMP_TRACE
+        - FINISH process_constructions()
+
+    TO IMPROVE:
+        - Subgraph matching algorithm (invoke_cxn_inst).
+        - Concept matching (inb invoke_cxn_inst) is binary and could be improved.
+    
+    TO IMPROVE

@@ -255,7 +255,7 @@ class CXN_INST(SCHEMA_INST):
         Args:
             - cxn1 (CNX_INST): first construction instance
             - cxn2 (CXN_INST): second construction instance
-            - match_info (MATCH_INFO): ????????
+            - match_info (MATCH_INFO): Stores match operation results.
             
         FINISH DESCRIPTION!!!
         """
@@ -730,10 +730,9 @@ class CXN_STRUCT:
         
         Notes: 
             - Cnx str are combined at the top.
-            - The top unit of one cxn str is linked to a compatible empty slot in the top 
-            unit of the other.
-            CONDITIONS: Top units match; there is an compatible empty slot; there
-        is no conflict between the two construction structures.
+            - The top unit of one cxn str is linked to a compatible empty slot in the top unit of the other.
+            - CONDITIONS: Top units match; there is an compatible empty slot; 
+            there is no conflict between the two construction structures.
         """
         if(not(cxn_str1) or not(cxn_str2)):
             return False
