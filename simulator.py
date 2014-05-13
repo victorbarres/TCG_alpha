@@ -45,15 +45,15 @@ class SIMULATOR:
         
         <VISION SYSTEM>
         - atten (REGION): Region currently under attentional focus
-        - next_atten (REGION): Next attention focus
+        - next_atten (REGION): Next attention focus. Can be either defined based on saliency or based on verbal guidance (see produce_utterance())
         - vis_update (BOOL): Visual update flag
         - per_regions ([REGION]): Already perceived regions
         
         <LANGUAGE SYSTEM>
         - utter (STR): Produced utterance
-        - incomp_utter (BOOL): Incomplete utterance flag
-        - rd_str (CXN_STRUCT): Read-out construction structure
-        - rd_phons ([TP_PHON]): Read-out phonetic notations
+        - incomp_utter (BOOL): Incomplete utterance flag. True if the last utterance did not cover the whole active SemRep. Trigers the VERBAL GUIDANCE!
+        - rd_str (CXN_STRUCT): Last read-out construction structure (useful to implement utterance continuity)
+        - rd_phons ([TP_PHON]): Last read-out phonetic notations (useful to implement utterance continuity)
         
         <WORKING MEMORY>
         - instances ([SCHEMA_INST]): All schema instances
@@ -229,7 +229,7 @@ class SIMULATOR:
                 break
         
         # Remove dead instances
-        for sc_inst in self.instances:
+        for sc_inst in self.instances[:]:
             if not(sc_inst.alive):
                 if(sc_inst in self.sem_insts):
                     self.sem_insts.remove(sc_inst)
@@ -591,9 +591,9 @@ class SIMULATOR:
 #                INST.CXN_INST.match(cxn_inst1, cxn_inst2, mat_info)
 #                if (mat_info.overlap and
 #                    cxn_inst1.cxn_struct and
-#                    not(cxn_inst1.cxn_struct.check_membership(cxn_inst2)) and
+#                    not(cxn_inst1.cxn_struct.check_membership(cxn = cxn_inst2)) and
 #                    cxn_str2 and
-#                    not(cxn_inst2.cxn_struct.check_membership(cxn_inst1))):
+#                    not(cxn_inst2.cxn_struct.check_membership(cxn = cxn_inst1))):
                 ###############################################################    
                     # Do not tie break in order to prevent reciprocal elimination
                     if (cxn_inst1.cxn_struct.suitability > cxn_inst2.cxn_struct.suitability and cxn_inst2.alive):
@@ -611,7 +611,7 @@ class SIMULATOR:
         self.do_cooperation()
         
         # Trim obsolete structures (i.e. covering old cxn instances only)
-        for cxn_str in self.cxn_strs:
+        for cxn_str in self.cxn_strs[:]:
             if cxn_str.check_obsolete():
                 self.cxn_strs.remove(cxn_str)
         
@@ -625,27 +625,188 @@ class SIMULATOR:
 #            if (not(cxn_str.check_complete) and 
 #                self.find_cxn_struct(cxn_str, self.cxn_strs, 2)):
             ###################################################################
-            self.cxn_strs.remove(cxn_str)
+                self.cxn_strs.remove(cxn_str)
         
         # Utterance continuity principle
+        if self.utter_cont:
+            # Adjust suitability
+            for csn_str in self.cxn_strs:
+                # Estimate the number of overlapped syntactic components
+                overlap = 0
+                for cxn_inst in self.rd_str.insts:
+                    if cxn_str.check_membership(cxn = cxn_inst):
+                        overlap +=1
+                for cxn_link in self.rd_str.links:
+                    if cxn_str.check_membership(link = cxn_link):
+                        overlap +=1
+                
+                continued = False
+                
+                if(self.rd_str.check_lineage(cxn_str)):
+                    # Produce subvocal utterace (vocal = False)
+                    phons = []
+                    cxn_str.read_out(cxn_str.top, -1, phons, False)
+                    skip = self.match_phon_lists(self.rd_phons, phons)
+                    if (self.rd_phons <= 0 and skip >0): # Check if utterance can be made continuously
+                        continued = True
+                    
+                if continued:
+                    # Continuity reward
+                    cxn_str.suitability += overlap * INST.CXN_STRUCT.RDD_WEIGHT
+                else:
+                    # Redundancy penalty
+                    cxn_str.suitability -= overlap * INST.CXN_STRUCT.RDD_WEIGHT
         
-        ## TO BE CONTINUED ##        
+        # Associate construction instances with structure of maximum suitability
+        for cxn_inst in self.cxn_insts:
+            if not(cxn_inst.alive):
+                continue
+            
+            for cxn_str in self.cxn_strs:
+                if not(cxn_str.check_membership(cxn = cxn_inst)):
+                    continue
+                
+                if (not(cxn_inst.cxn_str) or
+                    self._randmax(cxn_inst.cxn_str.suitability, cxn_str.suitability) == 1):
+                    cxn_inst.cxn_str = cxn_str
         
+        # Competition process
+        self.do_competition()
+        
+        # Invalidate construction structures that contain dead construction instances
+        for cxn_str in self.cxn_strs:
+            for cxn_inst in self.cxn_insts:
+                if cxn_inst.alive:
+                    continue
+                if cxn_str.check_membership(cxn = cxn_inst):
+                    cxn_str.valid = False
+            
+            
     ###########################################################################
-    def match_phon_lists(self):
+    def match_phon_lists(self, prev_phonlist, next_phonlist):
         """
+        Check if there is an i such that prev_phonlist[i:] is a sublist of next_phonlist
+        
+        Example:
+            prev_phonlist = [I, saw, that, the, man, kicks]
+            next_phonlist = [The, man, kicks, a, ball]
+            Return -> matches = 3, corresponds to index of 'a' in next_phon_list.
+            
+            prev_phonlist = [I, saw, that, the, man, kicks]
+            next_phonlist = [the, man, eats, a, cake]
+            Return -> matches = 0, prev_phonlist is not a sublist of next_phonlist.
+        
         """
-        return None
+        matches = 0
+        for i in range(len(prev_phonlist)):
+            for j in range(len(next_phonlist)):
+                if prev_phonlist[i+j] == next_phonlist[j]:
+                    continue
+                elif i+j >= len(prev_phonlist):
+                    matches = j
+                    break
+        
+        return matches
+                
     
-    def produce_utterance(self):
+    def produce_utterance(self, verbose = True):
         """
+        WRITE DOCSTRING!!
         """
-        return None
-    
+        # Reset utterance
+        self.utter = ''
+        
+        # Bypass threshold if no more update from vision or previous utterance was incomplete
+        if self.vis_update and not(self.incomp_utter):
+            # Calculate the total syllable length
+            totLen = 0
+            if(self.thresh_syll >=0):
+                for cxn_inst in self.cxn_insts:
+                    if not(cxn_inst.alive):
+                        continue
+                    
+                    for form_elem in cxn_inst.base_cxn.SynFrom:
+                        if form_elem.type != CXN.TP_ELEM.SLOT:
+                            totLen += len(form_elem.phonetics)
+        
+        # Check utterance thresholds are reached
+        if ((self.thresh_time < 0 or self.thresh_time > (self.time - self.utter_time)) and
+            (self.thresh_cxn < 0 or self.thresh_cxn > len(self.cxn_insts)) and
+            (self.thresh_syll < 0 or self.thresh_syll > totLen)):
+            return # thretholds not reached yet
+        
+        # Select construction structure to be read out
+        select_str = None
+        for cxn_str in self.cxn_strs:
+            if(not(select_str) or
+                self._randmax(select_str.suitability, cxn_str.suitability) == 1):
+                    select_str = cxn_str
+                    
+        
+        if not(select_str):
+            # Reset utterance variables
+            self.incomp_utter = False
+            self.rd_phons = []
+            self.rd_str = []
+        else:
+            # Read out phonetic notations
+            phons = []
+            unspoken = select_str.readout(select_str.top, 100, phons)
+            
+            # Skip previously spoken utterance (only within the same lineage)
+            skip = 0
+            if self.rd_str.check_lineage(select_str):
+                skip = self.match_phon_lists(self.rd_phons, phons)
+            
+            # reset utterance variables
+            self.incomp_utter = False
+            self.utter_time = self.time
+            self.rd_phons = phons[:]
+            self.rd_str.clear()
+            self.rd_str.top = select_str.top
+            self.rd_str.merge(select_str)
+            
+            # If there are unspoken elements, verbal guidance and premature production kick in.
+            if unspoken:
+                self.incomp_utter = True
+                
+                # Verbal guidance principle
+                if self.verb_guide:
+                    rgn = unspoken.schema.region
+                    if rgn.uncertainty>0:
+                        self.next_atten = rgn # Sets the next attentional focus.
+                
+                # Premature production principle
+                if not(self.prema_prod):
+                    if not(select_str.check_complete()):
+                        self.rd_phons = [] # If the structure is not complete and no premature prod -> do not utter anything.
+            
+            # Render utterance.
+            if verbose: # Adding the already uttered part in parenthesis
+                if skip > 0:
+                    self.utter += '('
+                    for p in range(skip):
+                        if p > 0:
+                            self.utter += ' '
+                        self.utter += self.rd_phons[p].phonetics
+                    self.utter += ')'
+            for p in range(skip, len(self.rd_phons)):
+                phon = self.rd_phons[p]
+                if (phon[0] != '-' and len(self.utter)>0 and self.utter[-1] != '-'):
+                    self.utter += ' '
+                self.utter += phon
+            
+            # Append prolonged pause
+            if (unspoken and len(self.utter) > 0):
+                self.utter += '...' # Incomplete utterance
+            
+            # Append verbalized pause when nothing to produce
+            if len(self.utter) <= 0:
+                self.utter += 'uh...'
     ###########################################################################
     # PUBLIC METHODS
     ###########################################################################
-    def proceed(self):
+    def proceed(self, verbose = True):
         """
         WRITE DOCSTRING
         """
@@ -664,7 +825,7 @@ class SIMULATOR:
         self.process_constructions()
         
         # Utterance processes
-        self.produce_utterance()
+        self.produce_utterance(verbose = True)
         
         return (INST.SCHEMA_INST.inst_activity or self.vis_update)
     

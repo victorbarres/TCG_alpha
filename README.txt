@@ -67,9 +67,16 @@ simulator.py
     TO DO:
         - Finish the docstring of COMP_TRACE
         - FINISH process_constructions()
+        - Check in produce utterance if the number of syllable cannot be more simply computed using synform.num_syllables.
 
     TO IMPROVE:
         - Subgraph matching algorithm (invoke_cxn_inst).
         - Concept matching (inb invoke_cxn_inst) is binary and could be improved.
+        - Produce utterance:
+            - the number of cxn-inst taken into consideration with respect to the thresh_cxn is the total number of cxn_inst in self.cxn_insts...
+                might be better to look at each structure independently.
+            - similarly for total syllable length: the number of syllables in all the cxn_inst that are in WM are summed...
+                might be better to look at the syllable length of each structure...
+            
     
     TO IMPROVE

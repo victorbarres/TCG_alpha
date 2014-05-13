@@ -449,7 +449,7 @@ class CXN_STRUCT:
     
     def check_lineage(self, cxn_str):
         """
-        NOT SURE WHAT THIS IS USEFUL FOR!
+        Returns True if cxn_str is identical, contains or is contained in the construction structure.
         """
         if not(cxn_str):
             return False
@@ -461,7 +461,7 @@ class CXN_STRUCT:
     
     def check_membership(self, cxn = None, link = None):
         """
-        Check if a given cxn (CXN_iNST) or link (CXN_LINK) are part of the structure.
+        Check if a given cxn (CXN_INST) or link (CXN_LINK) are part of the structure.
         """
         if cxn and link:
             raise NameError('Cannot check membership of cxn and link simultaneously')
@@ -642,8 +642,11 @@ class CXN_STRUCT:
         Returns:
             - Phon_list is modified through the recursive application of method (side effect).
             - Returns None if no emtpy slot is encountered.
-            - If an empty slot is encountered, process is interuppted, and a list of SemRep insts 
+            - If an empty slot is encountered, process is interuppted, and a SemRep inst
             that should be but are not covered is returned.
+            
+        Notes:
+            - the SemRep instance returned is the one associate with the first empty slot found.
             
         """
         if(vocal):
