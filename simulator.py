@@ -112,7 +112,7 @@ class SIMULATOR:
         self.verb_guide = False
     
     def initialize(self, maxTime, threshTime, threshCxn, threshSyll,
-                   premaProd, utterCont, verbGuide, clearData):
+                   premaProd, utterCont, verbGuide, clearData = False):
         """
         Initialize the simulator.
         

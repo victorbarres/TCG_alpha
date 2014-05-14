@@ -10,6 +10,7 @@ import instance as INST
 import construction as CXN
 import scene as SCN
 import concept as CPT
+import re
 
 def print_inst_status(sc_inst):
     p = ''
@@ -170,17 +171,108 @@ def print_current_state(sim):
     p += "> Next Attention\n"
     p += "  %s\n" % print_region(sim.next_atten)
     return p
+
+def load_init_file(file_name, sim):
+    print "Loading Initialization File '%s' ...\n" % file_name
+    
+    try:
+        f = open(file_name, 'r')
+    except:
+        print "\nFailed to open file '%s'.\n" % file_name
+        return False
+    
+    f_content = f.read()
+    f.close()
+    f_data = f_content.splitlines()
+    
+    fields = {'semantics file':'', 'grammar file':'', 'scene file':'', 
+              'threshold time':-1, 'threshold constructions':-1, 
+              'threshold syllables':-1, 'premature production':1,
+              'utterance continuity':1, 'verbal guidance':1, 'max time':100}
+
+    comment_sign = '#'
+    
+    for line in f_data:
+        if line[0] == comment_sign:
+            continue
         
-                
-                
-                
-                
-    
-    
+        line_data = [t.strip() for t in line.split('=')]
         
+        if len(line_data) != 2:
+            print "\nInvalid command line: %s\n" % line
+            return False
         
+        key_word = line_data[0]
+        default_value = fields.get(key_word)
+        if not(default_value):
+            print "\nInvalid command line: %s\n" % line
+            return False
+        
+        if(isinstance(default_value, int) and not(line_data[0][1:].isdigit())):
+            print "\nInvalid command line: %s\n" % line
+            return False
+        
+        fields[key_word] = line_data[1]
     
+    if not(fields['semantic file'] and fields['grammar file'] and fields['scene file']):
+        print "\nInput file name missing.\n"
+        return False
     
+    lod = LD.LOADER()
+    
+    okay = False
+    print "Loading Semantic Network '%s'...\n" % fields['semantic file']
+    mySemNet = lod.load_SemNet(fields['semantic file'])
+    if mySemNet:
+        print "Loading TCG Grammar '%s'...\n" % fields['grammar file']
+        myGrammar = lod.load_grammar(fields['grammar file'])
+        if myGrammar:
+            print "Loading TCG Scene '%s'...\n" % fields['scene file']
+            myScene = lod.load_scene(fields['grammar file'])
+            if myScene:
+                okay = True
+    
+    if not(okay):
+        print "LOADER ERROR"
+        return False
+    
+    # Initialize simulator
+    print "\nInitializing Simulator...\n"
+    sim.SemNet = mySemNet
+    sim.grammar = myGrammar
+    sim.scene = myScene
+    
+    try:
+        max_time = int(fields['max time'])
+        thresh_time = int(fields['threshold time'])
+        thresh_cxn = int(fields['threshold constructions'])
+        thresh_syll = int(fields['threshold syllables'])
+        prem_prod = bool(int(fields['premature production']))
+        utter_cont = bool(int(fields['utterance continuity']))
+        verb_guide = bool(int(fields['verbal guidance']))
+    except:
+        print "\nInvalid simulator parameter.\n"
+        return False
+    
+    sim.initialize(max_time, thresh_time, thresh_cxn, thresh_syll, prem_prod, utter_cont, verb_guide)
+                   
+    print "- Max Simulation Time : %i\n" % sim.max_time
+    print "- Premature Production : %b\n" % sim.prema_prod
+    print "- Utterance Continuity : %b\n" % sim.utter_cont
+    print "- Verbal Guidance : %b\n" % sim.verb_guide
+    print "- Threshold of Utterance : ",
+    t = ['', '', '']
+    i = 0
+    for val in [sim.thresh_time, sim.thresh_cxn, sim.thresh_syll]:
+        if val < 0:
+            t[i] = 'infinite'
+        else:
+            t[i] = str(val)
+        
+        i +=1
+    print "Time = %s, CXNs = %s, Syllables = %s\n" % (t[0], t[1], t[2])
+    
+    return True
 
 if __name__=='__main__':
     print 'Main prgm here...!'
