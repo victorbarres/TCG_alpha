@@ -4,13 +4,24 @@ Created on Tue May 13 15:02:26 2014
 
 @author: Victor Barres
 """
+import sys
+
 import loader as LD
 import simulator as SIM
 import instance as INST
 import construction as CXN
-import scene as SCN
-import concept as CPT
-import re
+
+TCG_ABOUT = "Template Construction Grammar (TCG) Simulator v1.0\n\
+            \n\
+            Victor Barres (barres@usc.edu) May 14. 2014\n\
+            USC Brain Project, Neuroscience Graduate Program and Computer Science Department\n\
+            University of Southern California (USC)\n\
+            PYTHON reimplementation of c++ code:\n\
+            \t(Template Construction Grammar (TCG) Simulator v2.5\n\
+            \tJinyong Lee (jinyongl@usc.edu), June 23. 2012\n\
+            \tUSC Brain Project, Computer Science Department\n\
+            \tUniversity of Southern California (USC)\n)"
+
 
 def print_inst_status(sc_inst):
     p = ''
@@ -274,6 +285,32 @@ def load_init_file(file_name, sim):
     
     return True
 
+def main():
+    print "\n%s\n" % TCG_ABOUT
+    if len(sys.argv) != 2:
+        print "Usage: python TCG.py initialization_file\n"
+        return
+    
+    # Initialization
+    mySim = SIM.SIMULATOR()
+    
+    # Load init file
+    if not(load_init_file(sys.argv[1], mySim)):
+        return
+    
+    # Simulation
+    print "\nBeginning Simulation...\n"
+    while (mySim.proceed(verbose = False)):
+        state_report = print_current_state(mySim)
+        print state_report
+    
+    print "\nSimulation complete: ",
+    if mySim.tim < mySim.max_time:
+        print "inactivity termination."
+    else:
+        print "max time reached."
+    print "\n"
+    
 if __name__=='__main__':
-    print 'Main prgm here...!'
+    main()
 
