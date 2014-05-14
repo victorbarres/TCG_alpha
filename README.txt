@@ -78,5 +78,5 @@ simulator.py
             - similarly for total syllable length: the number of syllables in all the cxn_inst that are in WM are summed...
                 might be better to look at the syllable length of each structure...
             
-    
-    TO IMPROVE
+
+main.py
