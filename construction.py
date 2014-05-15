@@ -21,7 +21,7 @@ class TP_ELEM:
     PHONETICS = 4    
     
     def __init__(self):
-        self.element_type = self.UNDEFINED # Element type
+        self.type = self.UNDEFINED # Element type
         self.parent_cxn = None # Parent construction
     
 class TP_SEM_ELEM(TP_ELEM):
@@ -45,7 +45,7 @@ class TP_NODE(TP_SEM_ELEM):
     """
     def __init__(self):
         TP_SEM_ELEM.__init__(self)
-        self.element_type = TP_ELEM.NODE
+        self.type = TP_ELEM.NODE
 
 class TP_REL(TP_SEM_ELEM):
     """
@@ -55,7 +55,7 @@ class TP_REL(TP_SEM_ELEM):
         TP_SEM_ELEM.__init__(self)
         self.pFrom = None
         self.pTo = None
-        self.element_type = TP_ELEM.RELATION
+        self.type = TP_ELEM.RELATION
 
 class TP_SYN_ELEM(TP_ELEM):
     """
@@ -76,7 +76,7 @@ class TP_SLOT(TP_SYN_ELEM):
         TP_SYN_ELEM.__init__(self)
         self.linked_SemElem = None # Linked Sem-Frame element
         self.cxn_classes = [] # Construction classes that can fill this slot
-        self.element_type = TP_ELEM.SLOT
+        self.type = TP_ELEM.SLOT
         
 class TP_PHON(TP_SYN_ELEM):
     """
@@ -84,7 +84,7 @@ class TP_PHON(TP_SYN_ELEM):
     """
     def __init__(self):
         TP_SYN_ELEM.__init__(self)
-        self.element_type = TP_ELEM.PHONETICS
+        self.type = TP_ELEM.PHONETICS
         self.phonetics = ''
         self.num_syllables = 0 # Used to measure utterance length.
         
@@ -159,21 +159,21 @@ class CXN:
         p += "SEM-FRAME:\n"
         for s in self.SemFrame:
             p += "\tname: %s\n" % s.name
-            if s.element_type == TP_ELEM.NODE:
+            if s.type == TP_ELEM.NODE:
                 p += "\ttype: node\n"
-            elif s.element_type == TP_ELEM.RELATION:
+            elif s.type == TP_ELEM.RELATION:
                 p += "\ttype: relation\n"
             else:
-                p += "\ttype: %s\n" % s.element_type
+                p += "\ttype: %s\n" % s.type
             p += "\tconcept: %s\n" % s.concept.meaning
             p += "\tshared: %s\n" % s.shared
             p += "\thead: %s\n" % s.head
-            if s.element_type == TP_ELEM.NODE:
+            if s.type == TP_ELEM.NODE:
                 if s.linked_slot == None:
                     p += "\tlinked slot order: None\n"
                 else:
                     p += "\tlinked slot order: %i\n" % s.linked_slot.order 
-            if s.element_type == TP_ELEM.RELATION:
+            if s.type == TP_ELEM.RELATION:
                 p += "\tfrom: %s\n" % s.pFrom.name
                 p += "\tto: %s\n" % s.pTo.name
             if self.SemFrame.index(s)!=(len(self.SemFrame)-1):
@@ -181,11 +181,11 @@ class CXN:
         p += "SYN-FORM:\n"
         for s in self.SynForm:
             p += "\torder: %i\n" % s.order
-            if s.element_type == TP_ELEM.SLOT:
+            if s.type == TP_ELEM.SLOT:
                 p += "\ttype: slot\n"
                 p += "\tlinked_node: %s\n" % s.linked_SemElem.name
                 p += "\tclasses: [%s]\n" % ' '.join(s.cxn_classes)
-            if s.element_type == TP_ELEM.PHONETICS:
+            if s.type == TP_ELEM.PHONETICS:
                 p += "\ttype: phonetics\n"
                 p += "\tphon: %s\n" % s.phonetics
                 p += "\tnum_syllables: %i\n" % s.num_syllables

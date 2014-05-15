@@ -7,7 +7,7 @@ Created on Mon Apr 28 18:14:40 2014
 Define schema instance related classes.
 """
 
-import concept as cpt
+import concept as CPT
 from construction import TP_ELEM
 
 ###############################################################################
@@ -74,7 +74,7 @@ class SCHEMA_INST:
             SCHEMA_INST.inst_activity = True
             self.activation = act
     
-    def Validate(self):
+    def validate(self):
         return
 
 ### SemRep schema instance ###     
@@ -90,13 +90,13 @@ class SEMREP_INST(SCHEMA_INST):
     
     Data:
         - concept (CONCEPT): Representing concept
-        - percept_schema (SCHEMA): Associated perceptual schema
+        - schema (SCHEMA): Associated perceptual schema
     """
     
     def __init__(self):
         SCHEMA_INST.__init__(self)
-        self.concept = cpt.CONCEPT()
-        self.percept_schema = None
+        self.concept = CPT.CONCEPT()
+        self.schema = None
     
     def Instantiate(self, pSchema, act):
         """
@@ -106,7 +106,7 @@ class SEMREP_INST(SCHEMA_INST):
             - pSchema(SCHEMA): perceptual schema
             - act (int): initial activation
         """
-        if not(self.percept_schema): # Instantiation only occurs once.
+        if not(pSchema):
             return
         
         self.Fresh(True)
@@ -114,7 +114,7 @@ class SEMREP_INST(SCHEMA_INST):
         self.Old(False)
         
         self.Activation(act)
-        self.percept_schema = pSchema
+        self.schema = pSchema
         
         self.concept.create(concept=pSchema.concept)
         
@@ -139,8 +139,8 @@ class REL_INST(SEMREP_INST):
     """
     Relation instance.
     """
-    def __init(self):
-        SEMREP_INST(self)
+    def __init__(self):
+        SEMREP_INST.__init__(self)
         self.type = SCHEMA_INST.RELATION
         self.pFrom = None
         self.pTo = None
@@ -779,4 +779,66 @@ class CXN_STRUCT:
 ###############################################################################
 
 if __name__=='__main__':
-    print "No test case implemented."
+    import scene as SCN
+    
+    s_i = SCHEMA_INST()
+    print s_i
+    print "id: %i" % s_i.id
+    print "type: %i" % s_i.type
+    print "activation: %i" % s_i.activation
+    print "Fresh Alive Old"
+    print s_i.fresh
+    print s_i.alive
+    print s_i.old
+    print "Set all three to True"
+    s_i.Alive(True)
+    s_i.Fresh(True)
+    s_i.Old(True)
+    print s_i.fresh
+    print s_i.alive
+    print s_i.old
+    print "Set activation to 10"
+    s_i.Activation(10)
+    print "activation: %i" %s_i.activation
+    print "\n"
+    
+    o_cpt = CPT.CONCEPT(name = 'Object_CPT_1', meaning = 'ObjectConcept')
+    o_rgn = SCN.REGION()
+    o_rgn.name = "object region"
+    o_schema = SCN.SC_OBJECT()
+    o_schema.region = o_rgn
+    o_schema.name = "OBJECT_SCHEMA_1"
+    o_schema.concept = o_cpt
+    
+    s_i = SEMREP_INST()
+    print s_i
+    print "id: %i" % s_i.id
+    print "type: %i" % s_i.type
+    print "activation: %i" % s_i.activation
+    print "Fresh Alive Old"
+    print s_i.fresh
+    print s_i.alive
+    print s_i.old
+    print "Set all three to True"
+    s_i.Alive(True)
+    s_i.Fresh(True)
+    s_i.Old(True)
+    print s_i.fresh
+    print s_i.alive
+    print s_i.old
+    print "Set activation to 10"
+    s_i.Activation(10)
+    print "activation: %i" %s_i.activation
+    print "schema"
+    print s_i.schema
+    print "concept"
+    print s_i.concept
+    print "\n"
+    print "Instantiate with object schema"
+    s_i.Instantiate(o_schema, 100)
+    print "activation: %i" %s_i.activation
+    print "schema"
+    print s_i.schema
+    print "concept"
+    print s_i.concept
+    

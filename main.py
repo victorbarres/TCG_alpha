@@ -12,15 +12,15 @@ import instance as INST
 import construction as CXN
 
 TCG_ABOUT = "Template Construction Grammar (TCG) Simulator v1.0\n\
-            \n\
-            Victor Barres (barres@usc.edu) May 14. 2014\n\
-            USC Brain Project, Neuroscience Graduate Program and Computer Science Department\n\
-            University of Southern California (USC)\n\
-            PYTHON reimplementation of c++ code:\n\
-            \t(Template Construction Grammar (TCG) Simulator v2.5\n\
-            \tJinyong Lee (jinyongl@usc.edu), June 23. 2012\n\
-            \tUSC Brain Project, Computer Science Department\n\
-            \tUniversity of Southern California (USC)\n)"
+\n\
+Victor Barres (barres@usc.edu) May 14. 2014\n\
+USC Brain Project and  Neuroscience Graduate Program\n\
+University of Southern California (USC)\n\
+[PYTHON reimplementation of c++ code:\n\
+\tTemplate Construction Grammar (TCG) Simulator v2.5\n\
+\tJinyong Lee (jinyongl@usc.edu), June 23. 2012\n\
+\tUSC Brain Project, Computer Science Department\n\
+\tUniversity of Southern California (USC)]\n"
 
 
 def print_inst_status(sc_inst):
@@ -56,7 +56,7 @@ def print_struct_status(cxn_str, rd_str):
 
 def print_semrep_inst(sr_inst):
     p = ''
-#    p += str(sr_inst.percept_schema.name)
+#    p += str(sr_inst.schema.name)
     p += str(sr_inst.concept.meaning)
     p += "_" + str(sr_inst.id)
     return p
@@ -124,7 +124,7 @@ def print_current_state(sim):
         for rgn in sim.per_regions:
             if sim.per_regions.index(rgn) > 0:
                 p += ", "
-            p += sim.per_regions.name
+            p += rgn.name
         p += "\n\n"
     
     if len(sim.instances) > 0:
@@ -145,7 +145,7 @@ def print_current_state(sim):
                 else:
                     p += "??"
                 p += " tp "
-                if sc_inst.pTp:
+                if sc_inst.pTo:
                     p += print_semrep_inst(sc_inst.pTo)
                 else:
                     p += "??"
@@ -179,6 +179,10 @@ def print_current_state(sim):
             p += print_cxn_struct(cxn_str, cxn_str.top, True)
             p + "\n"
     
+    if len(sim.utter) > 0:
+        p += "> Produced Utterance\n"
+        p += "'%s'\n" % sim.utter
+        
     p += "> Next Attention\n"
     p += "  %s\n" % print_region(sim.next_atten)
     return p
@@ -204,7 +208,7 @@ def load_init_file(file_name, sim):
     comment_sign = '#'
     
     for line in f_data:
-        if line[0] == comment_sign:
+        if not(line) or line[0] == comment_sign:
             continue
         
         line_data = [t.strip() for t in line.split('=')]
@@ -215,31 +219,27 @@ def load_init_file(file_name, sim):
         
         key_word = line_data[0]
         default_value = fields.get(key_word)
-        if not(default_value):
-            print "\nInvalid command line: %s\n" % line
-            return False
-        
-        if(isinstance(default_value, int) and not(line_data[0][1:].isdigit())):
+        if default_value == None:
             print "\nInvalid command line: %s\n" % line
             return False
         
         fields[key_word] = line_data[1]
     
-    if not(fields['semantic file'] and fields['grammar file'] and fields['scene file']):
+    if not(fields['semantics file'] and fields['grammar file'] and fields['scene file']):
         print "\nInput file name missing.\n"
         return False
     
     lod = LD.LOADER()
     
     okay = False
-    print "Loading Semantic Network '%s'...\n" % fields['semantic file']
-    mySemNet = lod.load_SemNet(fields['semantic file'])
+    print "Loading Semantic Network '%s'...\n" % fields['semantics file']
+    mySemNet = lod.load_SemNet(fields['semantics file'])
     if mySemNet:
         print "Loading TCG Grammar '%s'...\n" % fields['grammar file']
         myGrammar = lod.load_grammar(fields['grammar file'])
         if myGrammar:
             print "Loading TCG Scene '%s'...\n" % fields['scene file']
-            myScene = lod.load_scene(fields['grammar file'])
+            myScene = lod.load_scene(fields['scene file'])
             if myScene:
                 okay = True
     
@@ -268,9 +268,9 @@ def load_init_file(file_name, sim):
     sim.initialize(max_time, thresh_time, thresh_cxn, thresh_syll, prem_prod, utter_cont, verb_guide)
                    
     print "- Max Simulation Time : %i\n" % sim.max_time
-    print "- Premature Production : %b\n" % sim.prema_prod
-    print "- Utterance Continuity : %b\n" % sim.utter_cont
-    print "- Verbal Guidance : %b\n" % sim.verb_guide
+    print "- Premature Production : %s\n" % sim.prema_prod
+    print "- Utterance Continuity : %s\n" % sim.utter_cont
+    print "- Verbal Guidance : %s\n" % sim.verb_guide
     print "- Threshold of Utterance : ",
     t = ['', '', '']
     i = 0
@@ -305,7 +305,7 @@ def main():
         print state_report
     
     print "\nSimulation complete: ",
-    if mySim.tim < mySim.max_time:
+    if mySim.time < mySim.max_time:
         print "inactivity termination."
     else:
         print "max time reached."

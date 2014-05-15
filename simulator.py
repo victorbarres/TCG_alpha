@@ -128,7 +128,7 @@ class SIMULATOR:
         """
         self.time = 0
         self.max_time = maxTime
-        self.utter_time = self.m_time
+        self.utter_time = self.time
         self.comp_traces = []
         
         self.thresh_time = threshTime
@@ -161,7 +161,7 @@ class SIMULATOR:
     ###########################################################################
     # PRIVATE METHODS
     ###########################################################################
-    def _randmax(i, j):
+    def _randmax(self, i, j):
         if i > j:
             return 0
         elif i < j:
@@ -255,28 +255,28 @@ class SIMULATOR:
         self.atten = self.next_atten
         
         # Inspect region (incrementally reduce uncertainty)
-        if self.atten or self.atten.uncertainty>0:
+        if (self.atten and self.atten.uncertainty > 0):
             self.atten.uncertainty -= 1
         
         # Find the next target (if no region curently inspected or no uncertainty anymore)
-        if (not(self.atten) or self.atten <=0):
+        if (not(self.atten) or self.atten.uncertainty <= 0):
             
             # Saccade to the most salient region
             max_saliency = 0
             for reg in self.scene.regions:
-                if(reg.uncertainty <=0):
+                if reg.uncertainty <= 0:
                     continue # Already inspected, inhibition of return
-            
+                
                 if self._randmax(max_saliency, reg.saliency) == 1:
                     max_saliency = reg.saliency
                     self.next_atten = reg
             
-            if max_saliency <=0:
+            if max_saliency <= 0:
                 self.vis_update = False # No more region to attend
                 self.next_atten = None
                 
     ###########################################################################
-    def get_semrep_inst(self, percept_schema):
+    def get_semrep_inst(self, schema):
         """
         Look for the SemRep instance linked to a given perceptual schema.
         Return the SemRep instance if it exists, None otherwise.
@@ -284,7 +284,7 @@ class SIMULATOR:
         for s in self.sem_insts:
             if not(s.alive):
                 continue
-            if s.percept_schema == percept_schema:
+            if s.schema == schema:
                 return s
         return None
     
@@ -293,44 +293,45 @@ class SIMULATOR:
         For a given percept, update or create associated SemRep nodes and relations.
         
         Notes:
-            - Updated or created relations will be added to new_rels.
+            - Newly created SemRep relations instances are added to new_rels.
         """
         if not(aPercept):
             return
-        
+        # Case: Object percept
         if (aPercept.schema.type == SCN.SCHEMA.OBJECT):
             node = self.get_semrep_inst(aPercept.schema)
+            # If there already is a corresponding SemRep node instance -> update
             if node:
-                # Update node instance
                 if aPercept.replace_concept:
                     node.Update(aPercept.concept)
                 else:
                     node.Update(aPercept.schema.concept)
+            # Else, create it.
             else:
-                # Create new node instance
                 node = INST.NODE_INST()
                 node.Instantiate(aPercept.schema, 100)
                 if aPercept.replace_concept:
                     node.Update(aPercept.concept)
                 
                 self.add_schema_inst(node)
+        # Case: Relation percept
         if (aPercept.schema.type == SCN.SCHEMA.RELATION):
             relation = self.get_semrep_inst(aPercept.schema)
+            # If there already is a corresponding SemRep relation instance -> update
             if relation:
-                # Update relation instance
                 if aPercept.replace_concept:
                     relation.Update(aPercept.concept)
                 else:
                     relation.Update(aPercept.schema.concept)
+            # Else, create it
             else:
-                # Create new relation instance
                 relation = INST.REL_INST()
                 relation.Instantiate(aPercept.schema, 100)
                 if aPercept.replace_concept:
                     relation.Update(aPercept.concept)
                 
                 self.add_schema_inst(relation)
-                self.new_rels.append(relation)
+                new_rels.append(relation)
         
     def perceive_scene(self):
         """
@@ -473,7 +474,7 @@ class SIMULATOR:
         Invoke all constructions whose SemFrame match SemRep subgraphs (no duplicate).
         """
         attaches = []
-        for aCxn in self.grammar:
+        for aCxn in self.grammar.constructions:
             
             # Match SemFrame elements of aCxn against SemRep subgraphs.
             self.invoke_cxn_inst(aCxn, 0, attaches)
