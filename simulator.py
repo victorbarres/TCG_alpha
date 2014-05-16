@@ -90,7 +90,7 @@ class SIMULATOR:
         
         self.utter = ''
         self.incomp_utter = False
-        self.rd_str = None
+        self.rd_str = INST.CXN_STRUCT()
         self.rd_phons = []
         
         self.instances = []
@@ -103,20 +103,23 @@ class SIMULATOR:
         self.max_time = 0
         self.utter_time = 0
         
-        self.thresh_time = 0
-        self.thresh_cxn = 0
-        self.thresh_syll= 0
+        self.thresh_time = -1
+        self.thresh_cxn = -1
+        self.thresh_syll= -1
         
-        self.prema_prod = False
-        self.utter_cont = False
-        self.verb_guide = False
+        self.prema_prod = True
+        self.utter_cont = True
+        self.verb_guide = True
     
-    def initialize(self, maxTime, threshTime, threshCxn, threshSyll,
+    def initialize(self, myGrammar, myScene, mySemNet, maxTime, threshTime, threshCxn, threshSyll,
                    premaProd, utterCont, verbGuide, clearData = False):
         """
         Initialize the simulator.
         
         Args:
+            - myGrammar (GRAMMAR): A grammatical knowledge
+            - myScene (SCENCE): The input scene
+            - mySemNet (SEM_NET): The semantic knowledge
             - maxTime (INT): Max simulation duration
             - threshTime (INT): Time threshold (-1 for infinity)
             - threshCxn (INT): Construction number limit (-1 for infinity)
@@ -126,6 +129,11 @@ class SIMULATOR:
             - verbGuide (BOOL): Verbal guidance principles
             - clearData (BOOL): If True, grammatical knowlegde, semantic knowledge and visual input are cleared.
         """
+        self.grammar = myGrammar
+        self.scene = myScene
+        self.SemNet = mySemNet
+        CPT.CONCEPT.SEMANTIC_NETWORK = self.SemNet
+        
         self.time = 0
         self.max_time = maxTime
         self.utter_time = self.time
@@ -146,7 +154,7 @@ class SIMULATOR:
         
         self.utter = ''
         self.incomp_utter = False
-        self.rd_str = []
+        self.rd_str.clear()
         self.rd_phons = []
         
         self.instances = []
@@ -363,7 +371,12 @@ class SIMULATOR:
             rel.pTo = self.get_semrep_inst(sc_rel.pTo)
             
             # Alive only when the full connection is valid
-            rel.Alive(rel.pFrom and rel.pTo)
+            if not(rel.pFrom) or not(rel.pTo):
+                alive = False
+            else:
+                alive = True
+                
+            rel.Alive(alive)
     
     ###########################################################################
     def pair_node(self, node_inst, node_elem, aCxn, attaches):
@@ -411,10 +424,10 @@ class SIMULATOR:
             
             - The matching of concept is very simple here (match or no match).   
         """
-        if sf_idx+1 < len(aCxn.SemFrame): # Still some SemFrame elements to process
+        if sf_idx < len(aCxn.SemFrame): # Still some SemFrame elements to process
             sf_elem = aCxn.SemFrame[sf_idx]
             
-            # Iterate for all SemRem instances to find a potential match
+            # Iterate for all SemRep instances to find a potential match
             for sr_inst in self.sem_insts:
                 if not(sr_inst.alive):
                     continue
@@ -422,7 +435,7 @@ class SIMULATOR:
                 # Need to have the same type
                 if ((sr_inst.type == INST.SCHEMA_INST.NODE and sf_elem.type != CXN.TP_ELEM.NODE) or
                     (sr_inst.type == INST.SCHEMA_INST.RELATION and sf_elem.type != CXN.TP_ELEM.RELATION)):
-                        continue
+                    continue
                 
                 # Check if the SemRep instances has already been matched with another SemFrame element of aCxn
                 if (sr_inst in attaches):
@@ -451,14 +464,14 @@ class SIMULATOR:
                 
                 if (not self.pair_node(sr_inst.pFrom, rel_elem.pFrom, aCxn, attaches) or
                     not self.pair_node(sr_inst.pTo, rel_elem.pTo, aCxn, attaches)):
-                        return # Stop invocatoin
+                    return # Stop invocation
             
             if not(fresh):
                 return # Stop invocation
             
             # Invoke a new construction instance
             new_cxn_inst = INST.CXN_INST()
-            new_cxn_inst.instantiate(aCxn, attaches, 100)
+            new_cxn_inst.instantiate(aCxn, attaches[:], 100)
             
             # Check if there already is an indentical construction instance
             for anInst in self.cxn_insts:
@@ -474,11 +487,10 @@ class SIMULATOR:
         Invoke all constructions whose SemFrame match SemRep subgraphs (no duplicate).
         """
         attaches = []
-        for aCxn in self.grammar.constructions:
-            
+        for aCxn in self.grammar.constructions:            
             # Match SemFrame elements of aCxn against SemRep subgraphs.
             self.invoke_cxn_inst(aCxn, 0, attaches)
-    
+
     ###########################################################################
     def find_cxn_struct(self, cxn_str, cxn_str_list, comp_val):
         """
@@ -505,12 +517,11 @@ class SIMULATOR:
         for cxn_inst in self.cxn_insts:
             if not(cxn_inst.alive):
                 continue
-            
             # Spawn a new structure
             new_cxn_str = INST.CXN_STRUCT()
             new_cxn_str.create(cxn_inst)
             self.cxn_strs.append(new_cxn_str)
-        
+            
         #
         # Cooperatoin process (iteratively spanw all possible construction structures)
         #
@@ -617,7 +628,7 @@ class SIMULATOR:
                 self.cxn_strs.remove(cxn_str)
         
         # Trim redundant construction structures
-        for cxn_str in self.cxn_strs:
+        for cxn_str in self.cxn_strs[:]:
             if(self.find_cxn_struct(cxn_str, self.cxn_strs, 2)): # cxn_str is included in another structure
             
             ###################################################################
@@ -625,13 +636,13 @@ class SIMULATOR:
             ###################################################################
 #            if (not(cxn_str.check_complete) and 
 #                self.find_cxn_struct(cxn_str, self.cxn_strs, 2)):
-            ###################################################################
+            ###################################################################            
                 self.cxn_strs.remove(cxn_str)
         
         # Utterance continuity principle
         if self.utter_cont:
             # Adjust suitability
-            for csn_str in self.cxn_strs:
+            for cxn_str in self.cxn_strs:
                 # Estimate the number of overlapped syntactic components
                 overlap = 0
                 for cxn_inst in self.rd_str.insts:
@@ -643,14 +654,14 @@ class SIMULATOR:
                 
                 continued = False
                 
-                if(self.rd_str.check_lineage(cxn_str)):
+                if self.rd_str.check_lineage(cxn_str):
                     # Produce subvocal utterace (vocal = False)
                     phons = []
-                    cxn_str.read_out(cxn_str.top, -1, phons, False)
+                    cxn_str.readout(cxn_str.top, -1, phons, False)
                     skip = self.match_phon_lists(self.rd_phons, phons)
-                    if (self.rd_phons <= 0 and skip >0): # Check if utterance can be made continuously
+                    if (self.rd_phons <= 0 or skip > 0): # Check if utterance can be made continuously
                         continued = True
-                    
+
                 if continued:
                     # Continuity reward
                     cxn_str.suitability += overlap * INST.CXN_STRUCT.RDD_WEIGHT
@@ -667,9 +678,9 @@ class SIMULATOR:
                 if not(cxn_str.check_membership(cxn = cxn_inst)):
                     continue
                 
-                if (not(cxn_inst.cxn_str) or
-                    self._randmax(cxn_inst.cxn_str.suitability, cxn_str.suitability) == 1):
-                    cxn_inst.cxn_str = cxn_str
+                if (not(cxn_inst.cxn_struct) or
+                    self._randmax(cxn_inst.cxn_struct.suitability, cxn_str.suitability) == 1):
+                    cxn_inst.cxn_struct = cxn_str
         
         # Competition process
         self.do_competition()
@@ -701,10 +712,12 @@ class SIMULATOR:
         matches = 0
         for i in range(len(prev_phonlist)):
             for j in range(len(next_phonlist)):
-                if prev_phonlist[i+j] == next_phonlist[j]:
+                if i+j <len(prev_phonlist) and prev_phonlist[i+j] == next_phonlist[j]:
                     continue
                 elif i+j >= len(prev_phonlist):
                     matches = j
+                    break
+                else:
                     break
         
         return matches
@@ -748,7 +761,7 @@ class SIMULATOR:
             # Reset utterance variables
             self.incomp_utter = False
             self.rd_phons = []
-            self.rd_str = []
+            self.rd_str.clear()
         else:
             # Read out phonetic notations
             phons = []
@@ -792,7 +805,7 @@ class SIMULATOR:
                         self.utter += self.rd_phons[p].phonetics
                     self.utter += ')'
             for p in range(skip, len(self.rd_phons)):
-                phon = self.rd_phons[p]
+                phon = self.rd_phons[p].phonetics
                 if (phon[0] != '-' and len(self.utter)>0 and self.utter[-1] != '-'):
                     self.utter += ' '
                 self.utter += phon
@@ -809,7 +822,7 @@ class SIMULATOR:
     ###########################################################################
     def proceed(self, verbose = True):
         """
-        WRITE DOCSTRING
+        WRITE DOCSTRING!!
         """
         if (self.time >= self.max_time):
             return False
@@ -823,6 +836,7 @@ class SIMULATOR:
         
         # TCG processes
         self.invoke_constructions()
+
         self.process_constructions()
         
         # Utterance processes

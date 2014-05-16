@@ -37,12 +37,14 @@ def print_inst_status(sc_inst):
             if sc_inst.old:
                 p += "@"
             else:
-                p += "x"
-    p += "]"
+                p += "O"
+        else:
+            p +="x"
+    p += "] "
     return p
 
 def print_struct_status(cxn_str, rd_str):
-    p = ''
+    p = '['
     if cxn_str.valid:
         if rd_str.compare(cxn_str) == 3:
             p += "*"
@@ -50,7 +52,7 @@ def print_struct_status(cxn_str, rd_str):
             p += " "
     else:
         p += "X"
-    p += "]"
+    p += "] "
     p += str(cxn_str.suitability) + ": "
     return p
 
@@ -70,11 +72,11 @@ def print_cxn_inst(cxn_inst):
 def print_cxn_struct(cxn_str, cxn_inst, recursive = True):
     p = ''    
     if recursive:
-        print_cxn_inst(cxn_inst)
+        p += "%s " % print_cxn_inst(cxn_inst)
     
     for i in range(len(cxn_inst.base_cxn.SynForm)):
         TpSynElem = cxn_inst.base_cxn.SynForm[i]
-        if TpSynElem.type == CXN.TP_ELEM.SLOT:
+        if TpSynElem.type != CXN.TP_ELEM.SLOT:
             p += "'%s'" % TpSynElem.phonetics
         else:
             p += "["
@@ -85,13 +87,13 @@ def print_cxn_struct(cxn_str, cxn_inst, recursive = True):
             
             if child:
                 if recursive:
-                    print_cxn_struct(cxn_str, child, recursive)
+                    p += print_cxn_struct(cxn_str, child, recursive)
                 else:
-                    print_cxn_inst(child)
+                    p +=  print_cxn_inst(child)
             else:
                 p += " "
             p += "]"
-        if i < (len(cxn_inst.base_cxn.Synform) -1):
+        if i < (len(cxn_inst.base_cxn.SynForm) -1):
             p += " "
     
     return p
@@ -144,7 +146,7 @@ def print_current_state(sim):
                     p += print_semrep_inst(sc_inst.pFrom)
                 else:
                     p += "??"
-                p += " tp "
+                p += " to "
                 if sc_inst.pTo:
                     p += print_semrep_inst(sc_inst.pTo)
                 else:
@@ -177,11 +179,12 @@ def print_current_state(sim):
         for cxn_str in sim.cxn_strs:
             p += print_struct_status(cxn_str, sim.rd_str)
             p += print_cxn_struct(cxn_str, cxn_str.top, True)
-            p + "\n"
+            p += "\n"
+        p += "\n\n"
     
     if len(sim.utter) > 0:
         p += "> Produced Utterance\n"
-        p += "'%s'\n" % sim.utter
+        p += "'%s'\n\n" % sim.utter
         
     p += "> Next Attention\n"
     p += "  %s\n" % print_region(sim.next_atten)
@@ -249,9 +252,6 @@ def load_init_file(file_name, sim):
     
     # Initialize simulator
     print "\nInitializing Simulator...\n"
-    sim.SemNet = mySemNet
-    sim.grammar = myGrammar
-    sim.scene = myScene
     
     try:
         max_time = int(fields['max time'])
@@ -265,7 +265,7 @@ def load_init_file(file_name, sim):
         print "\nInvalid simulator parameter.\n"
         return False
     
-    sim.initialize(max_time, thresh_time, thresh_cxn, thresh_syll, prem_prod, utter_cont, verb_guide)
+    sim.initialize(myGrammar, myScene, mySemNet, max_time, thresh_time, thresh_cxn, thresh_syll, prem_prod, utter_cont, verb_guide)
                    
     print "- Max Simulation Time : %i\n" % sim.max_time
     print "- Premature Production : %s\n" % sim.prema_prod

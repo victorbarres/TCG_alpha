@@ -194,10 +194,10 @@ class CONCEPT:
         return False
         
     def match(concept1, concept2, inclusive = True):
-        """
-        !!TEMPORARY!!
-        
-        Check if two concept match ie if one is hypernym of the other.
+        """        
+        Check if two concept match. Case inclusive = False: concepts match only if they carry the same meaning.
+        Case inclusive = True: If a concept is tagged with + (e.g. ANIMAL+) it will match with any of its hyponym.
+        Otherwise, concepts match if they carry the same meaning.
         
         Args:
             - concept1 (CONCEPT)
@@ -205,25 +205,39 @@ class CONCEPT:
             - inclusive (BOOL)
         
         Notes:
-            - UNFINISHED!!! SOME ELEMENTS IN C++ CODE ARE UNCLEAR
-            - It seems that in the c++ version similarity between two matching concepts is 
-            always taken to be 0. I.e. distance does not matter in the c++ code.
-            See CXN_STRUCT.create() method.
+            - In the c++ version matching is boolean. No impact of distance on similarity.
         
         """
         if not(CONCEPT.SEMANTIC_NETWORK):
             return False
         
         mean1 = concept1.meaning
-        mean2 = concept2.meaning        
+        incl1 = mean1[-1] == '+'
+        if incl1:
+            mean1 = mean1[:-1]
+            
+        mean2 = concept2.meaning
+        incl2 = mean2[-1] == '+'
+        if incl2:
+            mean2 = mean2[:-1]
         
         # Forward direction
         dist1 = CONCEPT.SEMANTIC_NETWORK.distance(mean1, mean2, heuristic = True)
+        if (inclusive and dist1>=0 and incl1):
+            dist1 = 0 # Inclusive
         
         # Backward direction
         dist2 = CONCEPT.SEMANTIC_NETWORK.distance(mean2, mean1, heuristic = True)
+        if (inclusive and dist2>=0 and incl2):
+            dist2 = 0 # Inclusive
         
-        return (dist1>0) or (dist2>0) # TEMPORARY.
+        if (dist1!=0) and (dist2!=0):
+         return False # Only meaning with distance 0 are accepted as matched
+        
+        #
+        # Check other fields too
+        2
+        return True
 
 ###############################################################################
       
@@ -250,9 +264,9 @@ if __name__=='__main__':
     CONCEPT.SEMANTIC_NETWORK = semantic_network
     
     c1 = CONCEPT('c1', 'dog')
-    c2 = CONCEPT('c2', 'animal')
+    c2 = CONCEPT('c2', 'animal+')
     
-    print CONCEPT.match(c2, c1)
+    print CONCEPT.match(c1, c1)
 
     
     

@@ -401,6 +401,7 @@ class LOADER:
             flag = False
             phon_list.append(tk[:-1])
         else:
+            phon_list.append(tk)
             flag = True
             
         while flag:
@@ -941,26 +942,26 @@ class LOADER:
         
 ###############################################################################
 if __name__=='__main__':
-#    log = ''
-#    
+    log = ''
+    
     ld = LOADER()
 #    
-#    file_name = 'test_grammar.txt'
-#    g = ld.load_grammar(file_name)
-#    log += "GRAMMAR LOADED FROM %s\n\n" % file_name
-#    log += str(g)
+    file_name = 'data\TCG_grammar.txt'
+    g = ld.load_grammar(file_name)
+    log += "GRAMMAR LOADED FROM %s\n\n" % file_name
+    log += str(g)
 #    
 #    file_name = 'test_scene.txt'
 #    s = ld.load_scene(file_name)
 #    log += "SCENE LOADED FROM %s\n\n" % file_name
 #    log += str(s)
 #
-#    f = open('my_log', 'w')
-#    f.write(log)
-#    f.close()
+    f = open('my_log', 'w')
+    f.write(log)
+    f.close()
     
-    file_name = 'test_semantics.txt'
-    snet = ld.load_SemNet(file_name)
-    
-    print snet
+#    file_name = 'test_semantics.txt'
+#    snet = ld.load_SemNet(file_name)
+#    
+#    print snet
         

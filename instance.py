@@ -295,7 +295,7 @@ class CXN_INST(SCHEMA_INST):
             # cxn1 parent cxn2 child
             if(cxn2.elems[idx2].head and 
                     cxn1.slots[idx1] and 
-                    (cxn2.base_cxn.clss in cxn1.slots[idx1].classes)):
+                    (cxn2.base_cxn.clss in cxn1.slots[idx1].cxn_classes)):
                 match_info.match = 1
                 match_info.parent = cxn1
                 match_info.child = cxn2
@@ -303,7 +303,7 @@ class CXN_INST(SCHEMA_INST):
             # cxn2 parent cxn1 child
             if(cxn1.elems[idx1].head and
                     cxn2.slots[idx2] and
-                    (cxn1.base_cxn.clss in cxn2.slot[idx2].classes)):
+                    (cxn1.base_cxn.clss in cxn2.slots[idx2].cxn_classes)):
                 match_info.match = 1
                 match_info.parent = cxn2
                 match_info.child = cxn1
@@ -530,7 +530,7 @@ class CXN_STRUCT:
         
         ### Calculate base suitability ###
         # Semantic coverage
-        for i in range(len(cxn.cover)):
+        for i in range(len(cxn.covers)):
             if cxn.elems[i].shared:
                 continue # Structure doesn't get point for shared elements
             
@@ -569,7 +569,7 @@ class CXN_STRUCT:
  
         # Count the  number of matching links between structures.
         for link in self.links:
-            if cxn_str.check_membership(link):
+            if cxn_str.check_membership(link = link):
                 matched +=1
         
         if matched == 0:
@@ -578,11 +578,11 @@ class CXN_STRUCT:
                     return 3 # identical
             
             if self.links == []:
-                if cxn_str.check_membership(self.top):
+                if cxn_str.check_membership(cxn  = self.top):
                     return 2 # contained (subset)
                     
             if cxn_str.links == []:
-                if self.check_membership(cxn_str.top):
+                if self.check_membership(cxn = cxn_str.top):
                     return 4 # contains (superset)
             
             return 0 # none matched
@@ -606,10 +606,6 @@ class CXN_STRUCT:
         
         THE TWO CONSTRUCTION STRUCTURES SHOULD NOT SHARE ANY ELEMENT (NO DUPLICATION ASSUMED).
         """
-        # Not in C++ code
-        if (self.compare(cxn_str) != 0):
-            raise ValueError("The two cxn str merged should not share any element")
-        
         # add base suitability
         self.suitability += cxn_str.suitability
         
@@ -624,7 +620,7 @@ class CXN_STRUCT:
             cLink.child = link.child
             cLink.SynFormIdx = link.SynFormIdx
             
-            self.link.append(cLink)
+            self.links.append(cLink)
     
     def readout(self, cxn, act, phon_list, vocal = True):
         """
@@ -680,7 +676,7 @@ class CXN_STRUCT:
                 else:
                     # Retrieve SemRep instance to be spoken next
                     sem_elem = syn_elem.linked_SemElem
-                    unspoken = cxn.covers(cxn.base_cxn.SemFrame.index[sem_elem])
+                    unspoken = cxn.covers[cxn.base_cxn.SemFrame.index(sem_elem)]
                     return unspoken
         
         return None
@@ -738,12 +734,12 @@ class CXN_STRUCT:
             there is no conflict between the two construction structures.
         """
         if(not(cxn_str1) or not(cxn_str2)):
-            return False
+            return None
             
         # Match top instances
         mat_info = MATCH_INFO()
         CXN_INST.match(cxn_str1.top, cxn_str2.top, mat_info)
-        if mat_info < 1:
+        if mat_info.match < 1:
             return None # Combination is not possible
         
         # Check slot availability between the two top constructions
@@ -773,7 +769,7 @@ class CXN_STRUCT:
         cxn_link.child = mat_info.child
         cxn_link.SynFormIdx = mat_info.SynFormIdx
         
-        cxn_str.link.append(cxn_link)
+        cxn_str.links.append(cxn_link)
         
         return cxn_str
 ###############################################################################
