@@ -16,8 +16,8 @@ region GIST
 	saliency: 0
 	uncertainty: 0		# instantly perceived
 	
-	perceive MOUSE=OBJECT, TURTLE=OBJECT, SQUIRT=ACTION
-	perceive SQUIRT_AGENT, SQUIRT_PATIENT
+	update { MOUSE = OBJECT, TURTLE = OBJECT, SQUIRT = ACTION }
+	perceive { SQUIRT_AGENT, SQUIRT_PATIENT }
 }
 
 region TURTLE_AREA
@@ -28,7 +28,7 @@ region TURTLE_AREA
 
 	object TURTLE { concept: TURTLE }
 	
-	perceive TURTLE
+	perceive { TURTLE }
 }
 
 region SQUIRT_AREA
@@ -41,7 +41,7 @@ region SQUIRT_AREA
 	relation SQUIRT_AGENT { concept: AGENT from: SQUIRT to: MOUSE }
 	relation SQUIRT_PATIENT { concept: PATIENT from: SQUIRT to: TURTLE }
 	
-	perceive SQUIRT, SQUIRT_AGENT, SQUIRT_PATIENT
+	perceive { SQUIRT, SQUIRT_AGENT, SQUIRT_PATIENT }
 }
 
 region MOUSE_AREA
@@ -52,5 +52,5 @@ region MOUSE_AREA
 	
 	object MOUSE { concept: MOUSE }
 	
-	perceive MOUSE
+	perceive { MOUSE }
 }

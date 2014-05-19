@@ -73,7 +73,7 @@ class LOADER:
         - Grammar is the equivalent of Vocabulary in c++ code.
     """
     
-    COMMENT_SYMBOL = '#'
+    COMMENT_SYMBOL = ('#','#/', '/#')
     
     def __init__(self):
         self.pos = []
@@ -144,7 +144,12 @@ class LOADER:
         else:
             self.next_tk()
         
-        while(self.tk[0] == LOADER.COMMENT_SYMBOL):
+        if self.tk == LOADER.COMMENT_SYMBOL[1]:
+            while(self.tk != LOADER.COMMENT_SYMBOL[2]):
+                self.next_line()
+            self.next_line()
+        
+        while(self.tk[0] == LOADER.COMMENT_SYMBOL[0]):
             self.next_line()
         
         if self.done:
@@ -653,48 +658,91 @@ class LOADER:
         return True
     
     def read_percept(self, new_rgn, name_table):
+        if self.read_tk() != '{':
+            return False
+            
         # Process fields
         while True:
             tk = self.read_tk()
             if not(tk):
                 return False
-            
-            if tk[-1]==',':
+                
+            elif tk == '}':
+                break # No more elements to perceive
+
+            elif tk.isupper():
                 # Create new percept
                 new_per = scn.PERCEPT()
                 # Update region and name table
                 new_rgn.percepts.append(new_per)
-                sc_name = tk[:-1]
-                name_table['percepts'][new_per] = sc_name
-            
-            if tk[-1]!=',':
-                # Create new percept
-                new_per = scn.PERCEPT()
-                sc_name = tk
-                tk = self.read_tk()
-                if tk !='=':
-                    # Update region and table
-                    new_rgn.percepts.append(new_per)
-                    name_table['percepts'][new_per] = sc_name
-                    self.backtrack()
-                    break
-                elif tk == '=':
-                    tk = self.read_tk()
-                    new_concept = cpt.CONCEPT(meaning = tk)
-                    new_per.concept = new_concept
-                    new_per.replace_concept = True
-                    # Update region name table
-                    new_rgn.percepts.append(new_per)
-                    name_table['percepts'][new_per] = sc_name
-                    break
+                if tk[-1]==',':
+                    sc_name = tk[:-1]
                 else:
-                    return False
+                    sc_name = tk
+                name_table['percepts'][new_per] = sc_name
+#            if tk.isupper and tk[-1]!=',':
+#                # Create new percept
+#                new_per = scn.PERCEPT()
+#                sc_name = tk
+#                tk = self.read_tk()
+#                if tk !='=':
+#                    # Update region and table
+#                    new_rgn.percepts.append(new_per)
+#                    name_table['percepts'][new_per] = sc_name
+#                    self.backtrack()
+#                    break
+#                elif tk == '=':
+#                    tk = self.read_tk()
+#                    new_concept = cpt.CONCEPT(meaning = tk)
+#                    new_per.concept = new_concept
+#                    new_per.replace_concept = True
+#                    # Update region name table
+#                    new_rgn.percepts.append(new_per)
+#                    name_table['percepts'][new_per] = sc_name
+#                    break
+            else:
+                return False
             
         if not(name_table['percepts'].keys()):
                 return False
             
         return True
     
+    def read_update(self, new_rgn, name_table):
+        if self.read_tk() != '{':
+            return False
+        
+        while True:
+            tk = self.read_tk()
+            if not(tk):
+                return False
+            elif tk == '}':
+                break # No more element to update
+            elif tk.isupper():
+                # Create new percept
+                new_per = scn.PERCEPT()
+                sc_name = tk
+                tk = self.read_tk()
+                if tk != '=':
+                    return False
+                tk = self.read_tk()
+                if not(tk) or not(tk.isupper()):
+                    return False
+                if tk[-1] == ',':
+                    new_mean = tk[:-1]
+                else:
+                    new_mean = tk
+                new_concept = cpt.CONCEPT(meaning = new_mean)
+                new_per.concept = new_concept
+                new_per.replace_concept = True
+                # Update region name table
+                new_rgn.percepts.append(new_per)
+                name_table['percepts'][new_per] = sc_name
+            else:
+                return False
+                
+        return True
+                
     def read_region(self, scene, name_table):
         # Check name
         rgn_name = self.read_tk()
@@ -770,6 +818,12 @@ class LOADER:
                 flag = self.read_percept(new_rgn, name_table)
                 if not(flag):
                     self.error("Could not read percepts")
+                    return False
+            
+            elif tk == 'update':
+                flag = self.read_update(new_rgn, name_table)
+                if not(flag):
+                    self.error("Could not read updates")
                     return False
 
             else:
@@ -946,15 +1000,15 @@ if __name__=='__main__':
     
     ld = LOADER()
 #    
-    file_name = 'data\TCG_grammar.txt'
-    g = ld.load_grammar(file_name)
-    log += "GRAMMAR LOADED FROM %s\n\n" % file_name
-    log += str(g)
+#    file_name = 'data\TCG_grammar.txt'
+#    g = ld.load_grammar(file_name)
+#    log += "GRAMMAR LOADED FROM %s\n\n" % file_name
+#    log += str(g)
 #    
-#    file_name = 'test_scene.txt'
-#    s = ld.load_scene(file_name)
-#    log += "SCENE LOADED FROM %s\n\n" % file_name
-#    log += str(s)
+    file_name = 'data/scene_womanhitman.txt'
+    s = ld.load_scene(file_name)
+    log += "SCENE LOADED FROM %s\n\n" % file_name
+    log += str(s)
 #
     f = open('my_log', 'w')
     f.write(log)

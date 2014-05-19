@@ -743,11 +743,11 @@ class SIMULATOR:
                         if form_elem.type != CXN.TP_ELEM.SLOT:
                             totLen += len(form_elem.phonetics)
         
-        # Check utterance thresholds are reached
-        if ((self.thresh_time < 0 or self.thresh_time > (self.time - self.utter_time)) and
-            (self.thresh_cxn < 0 or self.thresh_cxn > len(self.cxn_insts)) and
-            (self.thresh_syll < 0 or self.thresh_syll > totLen)):
-            return # thretholds not reached yet
+            # Check utterance thresholds are reached
+            if ((self.thresh_time < 0 or self.thresh_time > (self.time - self.utter_time)) and
+                (self.thresh_cxn < 0 or self.thresh_cxn > len(self.cxn_insts)) and
+                (self.thresh_syll < 0 or self.thresh_syll > totLen)):
+                return # thretholds not reached yet
         
         # Select construction structure to be read out
         select_str = None
@@ -826,6 +826,8 @@ class SIMULATOR:
         """
         if (self.time >= self.max_time):
             return False
+        
+        INST.SCHEMA_INST.inst_activity = False
         
         # Maintenance processes
         self.ellapsed_time()

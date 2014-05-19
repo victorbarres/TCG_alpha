@@ -5,7 +5,7 @@
 # the famous "pretty woman in blue hit man" example
 #
 
-image: "woman hits man.jpg"
+image: "woman_hits_man.jpg"
 resolution: 400 * 326
 
 region WOMAN_AREA
@@ -16,7 +16,7 @@ region WOMAN_AREA
 	
 	object WOMAN { concept: WOMAN }
 	
-	perceive WOMAN
+	perceive { WOMAN }
 }
 
 region HIT_AREA
@@ -30,7 +30,7 @@ region HIT_AREA
 	relation HIT_AGENT { concept: AGENT from: HIT to: WOMAN }
 	relation HIT_PATIENT { concept: PATIENT from: HIT to: MAN }
 	
-	perceive HIT, MAN, HIT_AGENT, HIT_PATIENT
+	perceive { HIT, MAN, HIT_AGENT, HIT_PATIENT }
 }
 
 region WOMAN_FACE_AREA
@@ -42,7 +42,7 @@ region WOMAN_FACE_AREA
 	object PRETTY { concept: PRETTY }
 	relation PRETTY_MODIFY { concept: MODIFY from: PRETTY to: WOMAN }
 	
-	perceive PRETTY, PRETTY_MODIFY
+	perceive { PRETTY, PRETTY_MODIFY }
 }
 
 region DRESS_AREA
@@ -56,7 +56,7 @@ region DRESS_AREA
 	relation WEAR_AGENT { concept: AGENT from: WEAR to: WOMAN }
 	relation WEAR_PATIENT { concept: PATIENT from: WEAR to: DRESS }
 
-	perceive WEAR, DRESS, WEAR_AGENT, WEAR_PATIENT
+	perceive { WEAR, DRESS, WEAR_AGENT, WEAR_PATIENT }
 }
 
 region DRESS_FOCUS_AREA
@@ -68,6 +68,6 @@ region DRESS_FOCUS_AREA
 	object BLUE { concept: BLUE }
 	relation BLUE_MODIFY { concept: MODIFY from: BLUE to: DRESS }
 
-	perceive BLUE, BLUE_MODIFY
+	perceive { BLUE, BLUE_MODIFY }
 }
 

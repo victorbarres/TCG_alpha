@@ -45,6 +45,13 @@ instance.py
 scene.py
 
 loader.py
+    NOTES:
+        - Compared to C++, the scene.txt format has been modified. Keyword "update" added to distinguish between use of "perceive"
+        Now use:
+        perceive { SCHEMA1, SCHEMA2, SCHEMA3 }
+        update { SCHEMA1 = CONCEPT1, SCHEMA2 = CONCEPT2 }
+
+        - Does not handle image name contain space (C++ code does)
     TO IMPROVE:
         - Migrate data storage format to Json for clarity.
 

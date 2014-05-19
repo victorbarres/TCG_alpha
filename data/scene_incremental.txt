@@ -18,7 +18,7 @@ region WOMAN_AREA
 
 	object WOMAN { concept: WOMAN }
 	
-	perceive WOMAN
+	perceive { WOMAN }
 }
 
 region TALK_AREA
@@ -31,8 +31,8 @@ region TALK_AREA
 	relation TALK_AGENT { concept: AGENT from: TALK to: WOMAN }
 	relation TALK_PATIENT { concept: PATIENT from: TALK to: PEOPLE }
 	
-	perceive TALK, TALK_AGENT, TALK_PATIENT
-	perceive PEOPLE=HUMAN
+	perceive { TALK, TALK_AGENT, TALK_PATIENT }
+	update { PEOPLE = HUMAN }
 }
 
 region PEOPLE_AREA
@@ -43,5 +43,5 @@ region PEOPLE_AREA
 	
 	object PEOPLE { concept: PEOPLE }
 	
-	perceive PEOPLE
+	perceive { PEOPLE }
 }

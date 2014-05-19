@@ -23,9 +23,9 @@ region MAINEVENT
 	
 	relation WHILE { concept: CONCURRENT from: LAUGH to: WATCH }
 	
-	perceive WOMAN, LAUGH, LAUGH_AGENT
-	perceive BOY, WATCH, WATCH_AGENT
-	perceive WHILE
+	perceive { WOMAN, LAUGH, LAUGH_AGENT }
+	perceive { BOY, WATCH, WATCH_AGENT }
+	perceive { WHILE }
 }
 
 #/
@@ -36,8 +36,8 @@ region GIST
 	saliency: 100
 	uncertainty: 0
 
-	perceive WOMAN = ENTITY, KICK = ACTION, MAN = ENTITY	
-	perceive KICK_AGENT, KICK_PATIENT
+	update { WOMAN = ENTITY, KICK = ACTION, MAN = ENTITY }
+	perceive { KICK_AGENT, KICK_PATIENT }
 }
 
 region MAINEVENT
@@ -57,8 +57,8 @@ region MAINEVENT
 	relation HIT_AGENT { concept: AGENT from: HIT to: WOMAN }
 	relation HIT_PATIENT { concept: PATIENT from: HIT to: BOY }
 	
-	perceive WOMAN, KICK, MAN, KICK_AGENT, KICK_PATIENT
-	perceive HIT, BOY, HIT_AGENT, HIT_PATIENT
+	perceive { WOMAN, KICK, MAN, KICK_AGENT, KICK_PATIENT }
+	perceive { HIT, BOY, HIT_AGENT, HIT_PATIENT }
 }
 
 /#

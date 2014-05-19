@@ -220,10 +220,10 @@ class SCENE:
         p = ''
         p += "### VISUAL SCENE ###\n\n"
         p += "width: %i , height: %i\n\n" %(self.width, self.height)
-        p += "REGIONS (num=%i):\n\n" % (len(self.regions)+1)
+        p += "REGIONS (num=%i):\n\n" % (len(self.regions))
         for r in self.regions:
             p += str(r) + '\n'
-        p += "PERCEPTUAL SCHEMAS (num=%i):\n\n" % (len(self.schemas)+1)
+        p += "PERCEPTUAL SCHEMAS (num=%i):\n\n" % (len(self.schemas))
         for s in self.schemas:
             p += str(s) + '\n'
         return p

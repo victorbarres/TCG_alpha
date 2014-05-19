@@ -19,7 +19,7 @@ region LEFT_WOMAN_AREA
 	relation WEAR_AGENT_L { concept: AGENT from: WEAR_L to: WOMAN_L }
 	relation WEAR_PATIENT_L { concept: PATIENT from: WEAR_L to: DRESS_L }
 
-	perceive WOMAN_L, WEAR_L, DRESS_L, WEAR_AGENT_L, WEAR_PATIENT_L
+	perceive { WOMAN_L, WEAR_L, DRESS_L, WEAR_AGENT_L, WEAR_PATIENT_L }
 }
 
 region LEFT_DRESS_AREA
@@ -31,7 +31,7 @@ region LEFT_DRESS_AREA
 	object GREEN { concept: GREEN }
 	relation GREEN_MODIFY { concept: MODIFY from: GREEN to: DRESS_L }
 	
-	perceive GREEN, GREEN_MODIFY
+	perceive { GREEN, GREEN_MODIFY }
 }
 
 region KICK_AREA
@@ -44,8 +44,8 @@ region KICK_AREA
 	relation KICK_AGENT { concept: AGENT from: KICK to: WOMAN_L }
 	relation KICK_PATIENT { concept: PATIENT from: KICK to: WOMAN_R }
 
-	perceive KICK, KICK_PATIENT, KICK_AGENT
-	perceive WOMAN_R = HUMAN
+	perceive { KICK, KICK_PATIENT, KICK_AGENT }
+	update { WOMAN_R = HUMAN }
 }
 
 region RIGHT_WOMAN_AREA
@@ -60,7 +60,7 @@ region RIGHT_WOMAN_AREA
 	relation WEAR_AGENT_R { concept: AGENT from: WEAR_R to: WOMAN_R }
 	relation WEAR_PATIENT_R { concept: PATIENT from: WEAR_R to: DRESS_R }
 
-	perceive WOMAN_R, WEAR_R, DRESS_R, WEAR_AGENT_R, WEAR_PATIENT_R
+	perceive { WOMAN_R, WEAR_R, DRESS_R, WEAR_AGENT_R, WEAR_PATIENT_R }
 }
 
 region RIGHT_DRESS_AREA
@@ -72,7 +72,7 @@ region RIGHT_DRESS_AREA
 	object BLUE { concept: BLUE }
 	relation BLUE_MODIFY { concept: MODIFY from: BLUE to: DRESS_R }
 
-	perceive BLUE, BLUE_MODIFY
+	perceive { BLUE, BLUE_MODIFY }
 }
 
 region BOXINGRING_AREA
@@ -84,7 +84,7 @@ region BOXINGRING_AREA
 	object BOXINGRING { concept: BOXINGRING }
 	relation IN_BOXINGRING { concept: IN from: KICK to: BOXINGRING }
 	
-	perceive BOXINGRING, IN_BOXINGRING
+	perceive { BOXINGRING, IN_BOXINGRING }
 }
 
 region PEOPLE_AREA
@@ -95,7 +95,7 @@ region PEOPLE_AREA
 	
 	object PEOPLE { concept: PEOPLE }
 	
-	perceive PEOPLE
+	perceive { PEOPLE }
 }
 
 region PEOPLE_FOCUS_AREA
@@ -108,6 +108,6 @@ region PEOPLE_FOCUS_AREA
 	relation WATCH_AGENT { concept: AGENT from: WATCH to: PEOPLE }
 	relation WHILE { concept: CONCURRENT from: KICK to: WATCH }
 	
-	perceive WATCH, WATCH_AGENT, WHILE
+	perceive { WATCH, WATCH_AGENT, WHILE }
 }
 
