@@ -50,6 +50,7 @@ loader.py
         Now use:
         perceive { SCHEMA1, SCHEMA2, SCHEMA3 }
         update { SCHEMA1 = CONCEPT1, SCHEMA2 = CONCEPT2 }
+            UPDATE IS NOT THE PROPER TERM!
 
         - Does not handle image name contain space (C++ code does)
     TO IMPROVE:

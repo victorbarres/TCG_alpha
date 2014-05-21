@@ -196,7 +196,7 @@ class CONCEPT:
     def match(concept1, concept2, inclusive = True):
         """        
         Check if two concept match. Case inclusive = False: concepts match only if they carry the same meaning.
-        Case inclusive = True: If a concept is tagged with + (e.g. ANIMAL+) it will match with any of its hyponym.
+        Case inclusive = True: If a concept is tagged with + (e.g. ANIMAL+) it will match with any of its hyponyms.
         Otherwise, concepts match if they carry the same meaning.
         
         Args:

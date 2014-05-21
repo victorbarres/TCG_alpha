@@ -178,7 +178,7 @@ def print_current_state(sim):
             p += print_struct_status(cxn_str, sim.rd_str)
             p += print_cxn_struct(cxn_str, cxn_str.top, True)
             p += "\n"
-        p += "\n\n"
+        p += "\n"
     
     if len(sim.utter) > 0:
         p += "> Produced Utterance\n"
@@ -320,7 +320,7 @@ def main():
     
 if __name__=='__main__':
     out = main()
-    f = open('output.txt', 'w')
-    f.write(out)
-    f.close()
+#    f = open('output.txt', 'w')
+#    f.write(out)
+#    f.close()
 

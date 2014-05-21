@@ -659,7 +659,7 @@ class SIMULATOR:
                     phons = []
                     cxn_str.readout(cxn_str.top, -1, phons, False)
                     skip = self.match_phon_lists(self.rd_phons, phons)
-                    if (self.rd_phons <= 0 or skip > 0): # Check if utterance can be made continuously
+                    if (len(self.rd_phons) <= 0 or skip > 0): # Check if utterance can be made continuously
                         continued = True
 
                 if continued:
