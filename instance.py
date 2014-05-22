@@ -257,7 +257,18 @@ class CXN_INST(SCHEMA_INST):
             - cxn2 (CXN_INST): second construction instance
             - match_info (MATCH_INFO): Stores match operation results.
             
-        FINISH DESCRIPTION!!!
+       Algorithm:
+            - 1:If a relation already exists between instances (stored in cxn_matches), it is copied and returned.
+            - 2: Loop through all the SemRep instances covered by both cxn1 and cxn2
+                - if the two instances overlap on a SemRep instance that is not linked to a shared SemFrame elements in both instances -> CONFLICT
+                - Otherwise, check if cxn2 can link to a slot of cxn1 (cxn1 = parent, cxn2 = child) or vice versa.
+                A link is possible if:
+                    i. SemFrame element covering the SemRep instance in the parent instance has an associated slot
+                    ii. The child instance's class matches the class restriction of this slot.
+                    iii. The SemFrame element of the child instance linked to the SemRep instance is the head.
+                    
+        Notes:
+            - The match methods returns at most 1 match option. If both cxn1 and cxn2 can be parents, it will only return the option with cxn1 as parent.
         """
         match_info.clear()
         
@@ -276,7 +287,7 @@ class CXN_INST(SCHEMA_INST):
             
         match_info.match = 0 # Initially no relation between cxn instances
         
-        # Iterating over all semrep instances where both constructions instances overlap
+        # Iterating over all SemRep instances where both constructions instances overlap
         for idx1 in range(len(cxn1.covers)):            
             try:
                 idx2 = cxn2.covers.index(cxn1.covers[idx1])
@@ -405,7 +416,7 @@ class CXN_STRUCT:
             - each covered SemRep instance (that is not shared) adds SEM_WEIGHT
             - utterance lengths is measured as number of syllables. Suitability is inveresely 
             proportional to utterance length (favor compact utterances) weighted by LEN_WEIGHT.
-            - Each contructoin adds preference*PRF_WEIGHT.
+            - each contruction adds preference*PRF_WEIGHT.
             
             ex. For a single construction that covers 2 unshared SemRep nodes, has 7 syllables and a preference of 4
             
@@ -773,7 +784,6 @@ class CXN_STRUCT:
         
         return cxn_str
 ###############################################################################
-
 if __name__=='__main__':
     import scene as SCN
     

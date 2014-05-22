@@ -30,10 +30,8 @@ construction.py
     TO IMPROVE:
         - Introduce symbolic link elements
 
-instance.py
-    TO DO:
-        - Check the check_lineage method of CXN_STRUCT. Not sure what it is useful for....
 
+instance.py
     TO IMPROVE:
         - It seems that semantic distance does not matter in the current version
         (concept match or don't match). Introduce quality of matching.
@@ -41,8 +39,12 @@ instance.py
         - Might improve the parameters that enter in the calculus of suitability.
         - Think about how this integrates with the requirement to implement dynamic C2 computation.
         - See how merge can be generalized (i.e. bring together Merge and Combine.)
-
+        - Think about the issue in both cxn.match(a, b) and cxn_str.combine(a, b) related to the fact that at most 1 result is returned
+        when there could potentially be 2 valid results (technically, currently f(a,b) != f(b,a)...)
+    
+    
 scene.py
+
 
 loader.py
     NOTES:
@@ -56,26 +58,27 @@ loader.py
     TO IMPROVE:
         - Migrate data storage format to Json for clarity.
 
-###############################################################################
-# In progress
-###############################################################################
 
 concept.py
+    Notes:
     - SEM_NET.ROOT() method was not implemented as it seems to be deprecated
     - SEM_NET.Explore() method was not implemented as it seems to be deprecated
     - CONCEPT.Create() method might need to be revisited...
 
-    TO DO:
-        - CONCEPT.Match() method is INCOMPLETE. Need to clarify some elements in Jin's code.
-
     TO IMPROVE:
         - Implement SEM_NET as a graph
 
+
+TCG.py
+
+###############################################################################
+# In progress
+###############################################################################
+
 simulator.py
     TO DO:
-        - Finish the docstring of COMP_TRACE
-        - FINISH process_constructions()
         - Check in produce utterance if the number of syllable cannot be more simply computed using synform.num_syllables.
+        - Finish DOCSTRINGS!
 
     TO IMPROVE:
         - Subgraph matching algorithm (invoke_cxn_inst).
@@ -85,6 +88,5 @@ simulator.py
                 might be better to look at each structure independently.
             - similarly for total syllable length: the number of syllables in all the cxn_inst that are in WM are summed...
                 might be better to look at the syllable length of each structure...
-            
-
-main.py
+        - Although the simulator simulates incremental processes, the algorithms DO NOT actually work incrementally. Structures are rebuilt
+        each time step.

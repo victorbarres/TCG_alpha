@@ -48,7 +48,7 @@ class LOADER:
             	relation KICK_PATIENT { concept: PATIENT from: KICK to: WOMAN_R }
             
             	perceive KICK, KICK_PATIENT, KICK_AGENT
-            	perceive WOMAN_R = HUMAN # To indicate concept replacement
+            	update {WOMAN_R = HUMAN} # To indicate concept replacement
             }
         
         - Grammar file example:

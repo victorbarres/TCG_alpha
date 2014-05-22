@@ -16,14 +16,14 @@ import random
 class COMP_TRACE:
     """
     Competition trace
-    
-    IMCOMPLETE!!!
+    Used by the simulator to keep track of construction instances competition outcomes.
+    A comp_trace object is generated after each competition and stored by the simulator.
     
     Data:
-        - winner (CXN_INST):
-        - loser (CXN_INST):
-        - winSuit (INT):
-        - losSuit (INT):
+        - winner (CXN_INST): winner instance
+        - loser (CXN_INST): loser instance
+        - winSuit (INT): winer suitability (i.e. suitability of the structure it belongs to)
+        - losSuit (INT): loser suitability (i.e. suitability of the structure it belongs to)
     """
     def __init__(self):
         self.winner = None
@@ -33,7 +33,12 @@ class COMP_TRACE:
 
 class SIMULATOR:
     """
-    INCOMPLETE!!!
+    Simulator runs SemRep/TCG processes.
+    The simulator needs to be initialized with a grammar, a SemNet (semantic knowledge) and a visual scene.
+    Max time, thresholds of utterance values and TCG principles flags also need to be defined.
+    
+    Simulation is run by successive calls to proceed() method, until a termination condition is met. Each call to proceed() corresponds to
+    1 time step.
     
     Data:
         <LONG TERM MEMORY>
@@ -60,7 +65,7 @@ class SIMULATOR:
         - sem_insts ([SEMREP_INST]): All SemRep instances
         - cxn_insts ([CXN_INST]): All construction instances
         - cxn_strs ([CXN_STRUCT]): All construction structures        
-        - comp_traces ([COMP_TRACE]): Competition traces
+        - comp_traces ([COMP_TRACE]): Competition traces. Keep trace of cxn instances competition results
         
         <SIMULATION PARAMETERS>
         - time (INT):  Current simulation time (in relative unit)
@@ -199,6 +204,7 @@ class SIMULATOR:
     def ellapsed_time(self):
         """
         Maintenance process.
+        
         Steps:
             - Set cxn_inst with activity <= 0 to dead
             - Set old cxn_inst to activity = 0 (old means it has been read out)
@@ -254,7 +260,18 @@ class SIMULATOR:
     ###########################################################################
     def deploy_attention(self):
         """
-        WRITE DOCSTRING!!
+        Orient attention to most salient scene region and keep it under focus until the region's uncertainty < = 0.
+        Include inhibition of return.
+        
+        This method simulate the effect of (bottom-up) visual saliency on the attention process.
+        IMPORTANT: It can be overridden by verbal guidance (see produce_utterance()). If an utterance is produced orematurely while some information is
+        still missing that would be needed to complete it, the next attentional region is set to the region that contains the piece of infomration
+        needed.
+        
+        Steps:
+            1. Pick most salient region whose uncertainty >=0 (i.e. that has not yet been perceived)
+            2. Keep it under attentional focus until it's uncertainty <=0. Decrease uncertainty value by 1 ever time step.
+            3. Go back to 1.
         """
         # Visual update
         self.vis_update = True
@@ -343,7 +360,7 @@ class SIMULATOR:
         
     def perceive_scene(self):
         """
-        Perceive all regions that are certain (uncertainty == 0).
+        Perceive all regions that are certain (uncertainty == 0) and set their uncertainty to -1 so that they won't be perceived again.
         """
         new_rels = []
         

@@ -16,7 +16,7 @@ TCG_ABOUT = "Template Construction Grammar (TCG) Simulator v1.0\n\
 Victor Barres (barres@usc.edu) May 14. 2014\n\
 USC Brain Project and  Neuroscience Graduate Program\n\
 University of Southern California (USC)\n\
-[PYTHON reimplementation of c++ code:\n\
+[PYTHON reimplementation of C++ code:\n\
 \tTemplate Construction Grammar (TCG) Simulator v2.5\n\
 \tJinyong Lee (jinyongl@usc.edu), June 23. 2012\n\
 \tUSC Brain Project, Computer Science Department\n\
@@ -24,6 +24,14 @@ University of Southern California (USC)\n\
 
 
 def print_inst_status(sc_inst):
+    """
+    Print status of schema instance
+        ! = Fresh, the instance was just invoked.
+        X = Dead, the instance will be pruned out of the working memory next time step.
+        x = Alive instance with activation < 0
+        O = Alive instance with activation > 0 and not Old (Basic status of active instances)
+        @ = Alive instance with activation > 0 and Old -> The Old flag means that the instance has already been used for read-out.
+    """
     p = ''
     p += "["
     if sc_inst.fresh:
@@ -44,6 +52,11 @@ def print_inst_status(sc_inst):
     return p
 
 def print_struct_status(cxn_str, rd_str):
+    """
+    Print status of construction structure (cxn_str) with respect to the structure that is used for read out (rd_str)
+        * = This is the cxn_str used for production
+        X = The structure is not Valid (contains dead instances).
+    """
     p = '['
     if cxn_str.valid:
         if rd_str.compare(cxn_str) == 3:
@@ -57,6 +70,9 @@ def print_struct_status(cxn_str, rd_str):
     return p
 
 def print_semrep_inst(sr_inst):
+    """
+    Print SemRep instance as MEANINING_ID
+    """
     p = ''
 #    p += str(sr_inst.schema.name)
     p += str(sr_inst.concept.meaning)
@@ -64,12 +80,19 @@ def print_semrep_inst(sr_inst):
     return p
     
 def print_cxn_inst(cxn_inst):
+    """
+    Print construction instance as BASE-CXN-NAME_ID
+    """
     p = ''
     p += str(cxn_inst.base_cxn.name)
     p += "_" + str(cxn_inst.id)
     return p
     
 def print_cxn_struct(cxn_str, cxn_inst, recursive = True):
+    """
+    Print construction structure (cxn_str) starting from a given construction instance (cxn_inst) (usually Top instance).
+    If recursive = True, recursively print sub-structures.
+    """
     p = ''    
     if recursive:
         p += "%s " % print_cxn_inst(cxn_inst)
@@ -99,6 +122,9 @@ def print_cxn_struct(cxn_str, cxn_inst, recursive = True):
     return p
     
 def print_region(rgn):
+    """
+    Print regions (rgn) including the amount of uncertainty left.
+    """
     p = ''
     if(rgn):
         p += rgn.name
@@ -112,6 +138,9 @@ def print_region(rgn):
     return p
 
 def print_current_state(sim):
+    """
+    Print the current simulator state.
+    """
     p = ''
     p += ''.join(["=" for i in range(80)]) + "\n"
     p += " Simulation Time: %i\n" % sim.time
@@ -189,6 +218,13 @@ def print_current_state(sim):
     return p
 
 def load_init_file(file_name, sim):
+    """
+    Load intialization file and initialize simulator (sim).
+    
+    Args:
+        - file_name (STR): initialization file name (.ini file)
+        - sim (SIMULATOR): simulator to initialize.
+    """
     p = ''
     p += "Loading Initialization File '%s' ...\n" % file_name
     
@@ -285,6 +321,9 @@ def load_init_file(file_name, sim):
     return (True, p)
 
 def main():
+    """
+    Run simulation
+    """
     p = ''
     p += "\n%s\n" % TCG_ABOUT
     if len(sys.argv) != 2:

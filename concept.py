@@ -7,7 +7,6 @@ Created on Tue Apr 29 13:21:41 2014
 Define semantic knowledge related classes
 """
 ###############################################################################
-
 class SEM_REL:
     """
     Semantic Relation
@@ -44,7 +43,6 @@ class SEM_REL:
         return p
     
 ###############################################################################
-    
 class SEM_NET:
     """
     Semantic network (acting as world knowledge)
@@ -240,7 +238,6 @@ class CONCEPT:
         return True
 
 ###############################################################################
-      
 if __name__=='__main__':
     s1 = SEM_REL(SEM_REL.IS_A, 'cat', 'animal')
     s2 = SEM_REL(SEM_REL.IS_A, 'dog', 'animal')

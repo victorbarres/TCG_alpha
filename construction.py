@@ -205,7 +205,7 @@ class GRAMMAR:
         - constructions ([CXN])
     
     Notes:
-        - VOCAB in c++ code.
+        - Corresponds to VOCAB in c++ code.
     """
     def __init__(self):
         self.constructions = []
