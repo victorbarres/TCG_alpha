@@ -4,7 +4,7 @@ Created on Fri May 09 13:49:40 2014
 
 @author: Victor Barres
 
-Define the simulator that runs the SemRep/TCG processes.
+Define the simulator that runs the SemRep/TCG processes for TCG1.0
 """
 
 import concept as CPT
@@ -540,7 +540,7 @@ class SIMULATOR:
             self.cxn_strs.append(new_cxn_str)
             
         #
-        # Cooperatoin process (iteratively spanw all possible construction structures)
+        # Cooperation process (iteratively spawn all possible construction structures)
         #
         while True:
             new_structs = []

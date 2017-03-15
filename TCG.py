@@ -3,6 +3,8 @@
 Created on Tue May 13 15:02:26 2014
 
 @author: Victor Barres
+
+Define main() function and output printing functions for TCG1.0
 """
 import sys
 

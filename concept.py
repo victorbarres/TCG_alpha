@@ -4,7 +4,7 @@ Created on Tue Apr 29 13:21:41 2014
 
 @author: Victor Barres
 
-Define semantic knowledge related classes
+Define semantic knowledge related classes for TCG1.0
 """
 ###############################################################################
 class SEM_REL:

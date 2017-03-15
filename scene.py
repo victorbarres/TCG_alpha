@@ -4,7 +4,7 @@ Created on Mon May 05 12:07:09 2014
 
 @author: Victor Barres
 
-Define visual scene structure related classes.
+Define visual scene structure related classes for TCG1.0
 """
 ###############################################################################
 ### Perceptual schemas ###

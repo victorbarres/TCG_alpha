@@ -4,7 +4,7 @@ Created on Mon Apr 28 18:14:40 2014
 
 @author: Victor Barres
 
-Define schema instance related classes.
+Define schema instance related classes for TCG1.0
 """
 
 import concept as CPT
@@ -258,7 +258,7 @@ class CXN_INST(SCHEMA_INST):
             - match_info (MATCH_INFO): Stores match operation results.
             
        Algorithm:
-            - 1:If a relation already exists between instances (stored in cxn_matches), it is copied and returned.
+            - 1:If a relation already exists between instances (stored in cxn._matches), it is copied and returned.
             - 2: Loop through all the SemRep instances covered by both cxn1 and cxn2
                 - if the two instances overlap on a SemRep instance that is not linked to a shared SemFrame elements in both instances -> CONFLICT
                 - Otherwise, check if cxn2 can link to a slot of cxn1 (cxn1 = parent, cxn2 = child) or vice versa.
@@ -299,7 +299,7 @@ class CXN_INST(SCHEMA_INST):
             
             # Check conflict
             if(not(cxn1.elems[idx1].shared) and not(cxn2.elems[idx2].shared)):
-                match_info.match = -1 # If both construction overlap on an element that cannot be share -> Conflict
+                match_info.match = -1 # If both constructions overlap on an element that cannot be share -> Conflict
                 break
             
             # Check if construction class match slots class restrictions.
@@ -616,6 +616,9 @@ class CXN_STRUCT:
         Suitability of both cnx structures are added.
         
         THE TWO CONSTRUCTION STRUCTURES SHOULD NOT SHARE ANY ELEMENT (NO DUPLICATION ASSUMED).
+        
+        Notes: This method is only there to be used within the combine class method, since the output of merge is not a proper
+        construction structure (more a set containing 2 cnx sructs since the top instances have not been linked).
         """
         # add base suitability
         self.suitability += cxn_str.suitability

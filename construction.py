@@ -4,7 +4,7 @@ Created on Tue Apr 22 15:48:47 2014
 
 @author: Victor Barres
 
-Define constructions related classes.
+Define constructions related classes for TCG1.0
 """
 ###############################################################################
 ### Template ###
@@ -199,7 +199,7 @@ class CXN:
 
 class GRAMMAR:
     """
-    Grammar defined as a set of constructions.
+    Grammar defined as a set of constructions ("constructicon")
     
     Data:
         - constructions ([CXN])
